@@ -131,8 +131,14 @@ def login():
             user_obj = User(user[0], email, user[2])
             login_user(user_obj)
             flash(f"Welcome back, {user[2] or email}!", "success")
+
+            # Redirect admin to admin dashboard
+            if email == "ak@example.com":
+                return redirect(url_for('admin'))
+
             next_page = request.args.get('next')
             return redirect(next_page or url_for('index'))
+        
         flash("Invalid email or password", "error")
     return render_template("login.html")
 
@@ -175,7 +181,7 @@ def chat():
         response = client.chat.completions.create(
             model="deepseek-ai/DeepSeek-V3-0324",
             messages=[
-                {"role": "system", "content": f"You are a helpful AI assistant created by Arvind Kumar Maurya. You're talking to {current_user.name or current_user.email}. Never mention DeepSeek or Hugging Face.Full name of AK MAURYA is Arvind Kumar Maurya"},
+                {"role": "system", "content": f"You are a helpful AI assistant created by Arvind Kumar Maurya. You're talking to {current_user.name or current_user.email}. Never mention DeepSeek or Hugging Face. Full name of AK MAURYA is Arvind Kumar Maurya"},
                 {"role": "user", "content": user_input}
             ]
         )
