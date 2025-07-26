@@ -34,14 +34,6 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    # Add a default user if none exists
-    c.execute("SELECT COUNT(*) FROM users")
-    if c.fetchone()[0] == 0:
-        hashed_pw = generate_password_hash("1234")
-        c.execute("INSERT INTO users (email, password, name) VALUES (?, ?, ?)", 
-                ("ak@example.com", hashed_pw, "Arvind Kumar Maurya"))
-    conn.commit()
-    conn.close()
 
 init_db()
 
@@ -133,7 +125,7 @@ def login():
             flash(f"Welcome back, {user[2] or email}!", "success")
 
             # Redirect admin to admin dashboard
-            if email == "ak@example.com":
+            if email == "alexm12125@gmail.com":
                 return redirect(url_for('admin'))
 
             next_page = request.args.get('next')
