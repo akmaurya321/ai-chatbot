@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | AK Chatbot</title>
+    <title>Register | Chatbot</title>
     <style>
-         :root {
+    :root {
             --primary-color: #4361ee;
             --primary-dark: #3a56d4;
             --text-color: #2b2d42;
@@ -34,7 +34,7 @@
             line-height: 1.6;
         }
 
-        .login-container {
+        .register-container {
             width: 100%;
             max-width: 420px;
             padding: 2.5rem;
@@ -45,7 +45,7 @@
             overflow: hidden;
         }
 
-        .login-container::before {
+        .register-container::before {
             content: '';
             position: absolute;
             top: 0;
@@ -116,54 +116,21 @@
             background-color: var(--primary-dark);
         }
 
-        .forgot-password {
-            text-align: right;
-            margin-top: -1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .forgot-password a {
-            color: #6c757d;
-            font-size: 0.85rem;
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .forgot-password a:hover {
-            color: var(--primary-color);
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 1.5rem 0;
-            color: #6c757d;
-            font-size: 0.85rem;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border-color);
-            margin: 0 0.5rem;
-        }
-
-        .signup-link {
+        .login-link {
             text-align: center;
             font-size: 0.9rem;
             color: #6c757d;
+            margin-top: 1rem;
         }
 
-        .signup-link a {
+        .login-link a {
             color: var(--primary-color);
             font-weight: 600;
             text-decoration: none;
             transition: var(--transition);
         }
 
-        .signup-link a:hover {
+        .login-link a:hover {
             text-decoration: underline;
         }
 
@@ -174,33 +141,37 @@
             background-color: #f8d7da;
             color: var(--error-color);
             font-size: 0.9rem;
+        }
     </style>
 </head>
 
 <body>
-    <div class="login-container">
+    <div class="register-container">
         <div class="logo">
             <h1>AK Chatbot</h1>
-            <p>Welcome back! Please login to your account.</p>
+            <p>Create your personalized AI assistant</p>
         </div>
 
-        <form method="POST" action="/login">
+        <form method="POST" action="/register">
+            <div class="form-group">
+                <label for="name">Your Name</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="How should we call you?">
+            </div>
             <div class="form-group">
                 <label for="email">Email Address</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required
-                    value="ak@example.com">
+                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" class="form-control" id="password" name="password"
-                    placeholder="Enter your password" required value="1234">
+                    placeholder="Create a password" required>
             </div>
 
-            <button type="submit" class="btn">Login</button>
+            <button type="submit" class="btn">Create Account</button>
 
-            <div class="signup-link">
-                Don't have an account? <a href="/register">Register</a>
+            <div class="login-link">
+                Already have an account? <a href="/login">Login</a>
             </div>
         </form>
     </div>
