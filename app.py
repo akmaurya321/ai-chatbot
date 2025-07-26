@@ -39,7 +39,7 @@ def init_db():
     if c.fetchone()[0] == 0:
         hashed_pw = generate_password_hash("1234")
         c.execute("INSERT INTO users (email, password, name) VALUES (?, ?, ?)", 
-                ("ak@example.com", hashed_pw, "AK Maurya"))
+                ("ak@example.com", hashed_pw, "Arvind Kumar Maurya"))
     conn.commit()
     conn.close()
 
