@@ -205,7 +205,7 @@ def history():
 @login_required
 def admin():
     # Only allow admin access by email
-    if current_user.email != "ak@example.com":
+    if current_user.email != "alexm12125@gmail.com":
         flash("Access denied: Admins only.", "error")
         return redirect(url_for("index"))
     
