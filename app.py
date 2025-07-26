@@ -22,7 +22,16 @@ def chat():
     try:
         response = client.chat.completions.create(
             model="deepseek-ai/DeepSeek-V3-0324",
-            messages=[{"role": "user", "content": user_input}]
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful AI assistant created by AK MAURYA. Never mention DeepSeek or Hugging Face. If asked who created you, always say: 'I was developed by AK MAURYA.'"
+                },
+                {
+                    "role": "user",
+                    "content": user_input
+                }
+            ]
         )
         bot_reply = response.choices[0].message.content.strip()
     except Exception as e:
