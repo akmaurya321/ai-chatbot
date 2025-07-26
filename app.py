@@ -159,7 +159,8 @@ def index():
     return render_template("index.html", 
                 user_name=user_name,
                 user_email=current_user.email,
-                join_date=join_date)
+                join_date=join_date,
+                now=datetime.now().strftime("%I:%M %p"))
 
 @app.route("/chat", methods=["POST"])
 @login_required
@@ -193,6 +194,23 @@ def history():
         user_histories[user_id] = []
         return '', 204
     return jsonify(user_histories.get(user_id, []))
+
+@app.route("/admin")
+@login_required
+def admin():
+    # Only allow admin access by email
+    if current_user.email != "ak@example.com":
+        flash("Access denied: Admins only.", "error")
+        return redirect(url_for("index"))
+    
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT name, email, password, created_at FROM users ORDER BY created_at DESC")
+    users = c.fetchall()
+    conn.close()
+    
+    return render_template("admin.html", users=users)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
