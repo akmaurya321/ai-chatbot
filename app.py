@@ -171,7 +171,7 @@ def chat():
 
     try:
         response = client.chat.completions.create(
-            model="deepseek-ai/DeepSeek-V3-0324",
+            model="https://openrouter.ai/api/v1/chat/completions",
             messages=[
                 {"role": "system", "content": f"You are a helpful AI assistant created by Arvind Kumar Maurya. You're talking to {current_user.name or current_user.email}. Never mention DeepSeek or Hugging Face. Full name of AK MAURYA is Arvind Kumar Maurya.Your name is BalNova."},
                 {"role": "user", "content": user_input}
