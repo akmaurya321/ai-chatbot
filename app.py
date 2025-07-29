@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from collections import deque  # Added for conversation memory
 
 load_dotenv()
 
@@ -55,7 +56,7 @@ def load_user(user_id):
         return User(user[0], user[1], user[2])
     return None
 
-# In-Memory Chat History Per User
+# In-Memory Chat History Per User (using deque for 50 message memory)
 user_histories = {}
 
 # Routes
@@ -166,22 +167,41 @@ def chat():
     user_input = request.json.get("message")
     user_id = current_user.id
 
+    # Initialize user's history if needed
     if user_id not in user_histories:
-        user_histories[user_id] = []
+        user_histories[user_id] = deque(maxlen=60)  # Stores last 60 messages
+    
+    # Prepare context messages
+    context_messages = [
+        {"role": "system", "content": f'''You are a helpful AI assistant created by Arvind Kumar Maurya.
+        You're talking to {current_user.name or current_user.email}. 
+        Never mention DeepSeek or Hugging Face in chat. Full name of AK MAURYA is Arvind Kumar Maurya. 
+        Your name is BalNova means young energy or.You are able to remember 60 past chat history'''}
+    ]
+    
+    # Add previous conversation history
+    for msg in user_histories[user_id]:
+        context_messages.append({
+            "role": "user" if msg.startswith("User:") else "assistant",
+            "content": msg.split(":", 1)[1].strip()
+        })
+    
+    # Add current user message
+    context_messages.append({"role": "user", "content": user_input})
 
     try:
         response = client.chat.completions.create(
             model="deepseek-ai/DeepSeek-V3-0324",
-            messages=[
-                {"role": "system", "content": f"You are a helpful AI assistant created by Arvind Kumar Maurya. You're talking to {current_user.name or current_user.email}. Never mention DeepSeek or Hugging Face in chat . Full name of AK MAURYA is Arvind Kumar Maurya.Your name is BalNova."},
-                {"role": "user", "content": user_input}
-            ]
+            messages=context_messages
         )
         bot_reply = response.choices[0].message.content.strip()
     except Exception as e:
         bot_reply = f"⚠️ Error: {str(e)}"
 
-    user_histories[user_id].append({"user": user_input, "bot": bot_reply})
+    # Store conversation (auto maintains last 60 messages)
+    user_histories[user_id].append(f"User: {user_input}")
+    user_histories[user_id].append(f"Assistant: {bot_reply}")
+    
     return jsonify({"reply": bot_reply})
 
 @app.route("/history", methods=["GET", "DELETE"])
@@ -189,9 +209,13 @@ def chat():
 def history():
     user_id = current_user.id
     if request.method == "DELETE":
-        user_histories[user_id] = []
+        if user_id in user_histories:
+            user_histories[user_id].clear()
         return '', 204
-    return jsonify(user_histories.get(user_id, []))
+    
+    # Convert deque to list for JSON serialization
+    history_list = list(user_histories.get(user_id, deque()))
+    return jsonify(history_list)
 
 @app.route("/admin")
 @login_required
