@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | Chatbot</title>
     <style>
-    :root {
+        :root {
             --primary-color: #4361ee;
             --primary-dark: #3a56d4;
             --text-color: #2b2d42;
@@ -29,7 +29,11 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: var(--light-gray);
+            background-image: url("{{ url_for('static', filename='LoginRegisterBackgroundPage.jpg') }}");            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            height: 100vh;
+            margin: 0;
             color: var(--text-color);
             line-height: 1.6;
         }
@@ -159,7 +163,8 @@
             </div>
             <div class="form-group">
                 <label for="email">Email Address</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email"
+                    required>
             </div>
 
             <div class="form-group">

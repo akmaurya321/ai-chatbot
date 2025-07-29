@@ -2,11 +2,10 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ user_name }}'s AI Chatbot</title>
     <style>
-        /* Your existing CSS unchanged */
         :root {
             --primary-color: #4285f4;
             --secondary-color: #34a853;
@@ -17,6 +16,8 @@
             --bot-bubble: #f1f1f1;
             --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             --error-color: #ea4335;
+            --header-gradient: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            --header-text: white;
         }
 
         .dark-theme {
@@ -29,6 +30,8 @@
             --bot-bubble: #202124;
             --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             --error-color: #f28b82;
+            --header-gradient: linear-gradient(135deg, #1a1d23 0%, #2d3748 100%);
+            --header-text: #e8eaed;
         }
 
         body {
@@ -54,10 +57,11 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background-color: var(--primary-color);
-            color: white;
+            background: var(--header-gradient);
+            color: var(--header-text);
             box-shadow: var(--shadow);
             z-index: 10;
+            transition: all 0.3s ease;
         }
 
         .header-info {
@@ -115,12 +119,6 @@
             transform: scale(1.05);
         }
 
-        .header h1 {
-            margin: 0;
-            font-weight: 600;
-            font-size: 1.3rem;
-        }
-
         .control-btn i {
             font-size: 16px;
         }
@@ -157,7 +155,6 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -271,13 +268,9 @@
         }
 
         @keyframes typingAnimation {
-
-            0%,
-            60%,
-            100% {
+            0%, 60%, 100% {
                 transform: translateY(0);
             }
-
             30% {
                 transform: translateY(-5px);
             }
@@ -331,11 +324,9 @@
             0% {
                 box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.7);
             }
-
             70% {
                 box-shadow: 0 0 0 10px rgba(234, 67, 53, 0);
             }
-
             100% {
                 box-shadow: 0 0 0 0 rgba(234, 67, 53, 0);
             }
@@ -381,7 +372,7 @@
             opacity: 0.8;
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
@@ -396,14 +387,14 @@
             </div>
             <div class="header-controls">
                 <form action="/logout" method="get" style="display:inline;">
-                    <button type="submit" class="control-btn" title="Logout">
+                    <button type="submit" class="control-btn" title="Logout" aria-label="logout">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </form>
-                <button class="control-btn" id="theme-toggle" title="Toggle Theme">
+                <button type="submit" class="control-btn" id="theme-toggle" title="Toggle Theme" aria-label="Toggle Theme">
                     <i class="fas fa-moon"></i>
                 </button>
-                <button class="control-btn" id="clear-chat" title="Clear Chat">
+                <button type="submit" class="control-btn" id="clear-chat" title="Clear Chat" aria-label="clear Chat">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
@@ -411,7 +402,6 @@
 
         <div class="chat-container">
             <div class="chat-box" id="chat-box">
-                <!-- Chat messages will appear here -->
                 <div class="message bot-message">
                     <div class="markdown-content">
                         <p>Hello <strong>{{ user_name }}</strong>! 👋 I'm your AI assistant. How can I help you today?</p>
@@ -420,11 +410,11 @@
                 </div>
             </div>
             <div class="input-area">
-                <button class="voice-btn" id="voice-btn" title="Voice Input">
+                <button type="submit" class="voice-btn" id="voice-btn" title="Voice Input" aria-label="Voice Input">
                     <i class="fas fa-microphone"></i>
                 </button>
                 <textarea id="user-input" placeholder="Type your message here..." autocomplete="off" rows="1"></textarea>
-                <button id="send-button" disabled>
+                <button type="submit" id="send-button" disabled aria-label="disabled Input">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -509,8 +499,12 @@
         const setTheme = (theme) => {
             if (theme === 'dark') {
                 document.documentElement.classList.add('dark-theme');
+                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+                themeToggleBtn.title = "Switch to Light Mode";
             } else {
                 document.documentElement.classList.remove('dark-theme');
+                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+                themeToggleBtn.title = "Switch to Dark Mode";
             }
             localStorage.setItem('theme', theme);
         };
@@ -520,10 +514,8 @@
             setTheme(currentTheme === 'light' ? 'dark' : 'light');
         });
 
-        // Initialize theme
         setTheme(localStorage.getItem('theme') || 'light');
 
-        // Load chat history on page load
         window.addEventListener('DOMContentLoaded', async () => {
             try {
                 const res = await fetch('/history');

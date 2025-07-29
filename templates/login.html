@@ -29,7 +29,11 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: var(--light-gray);
+            background-image: url("{{ url_for('static', filename='LoginRegisterBackgroundPage.jpg') }}");            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            height: 100vh;
+            margin: 0;
             color: var(--text-color);
             line-height: 1.6;
         }
@@ -174,6 +178,7 @@
             background-color: #f8d7da;
             color: var(--error-color);
             font-size: 0.9rem;
+        }
     </style>
 </head>
 
