@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>{{ user_name }}'s AI Chatbot</title>
+    <title>{{ user_name }}'s AI Study Assistant</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -21,6 +21,8 @@
             --header-text: white;
             --highlight-color: rgba(255, 255, 0, 0.3);
             --page-controls-bg: rgba(255, 255, 255, 0.9);
+            --flashcard-color: #f8f9fa;
+            --flashcard-text: #212529;
         }
 
         .dark-theme {
@@ -37,6 +39,8 @@
             --header-text: #e8eaed;
             --highlight-color: rgba(255, 255, 0, 0.5);
             --page-controls-bg: rgba(48, 49, 52, 0.9);
+            --flashcard-color: #343a40;
+            --flashcard-text: #f8f9fa;
         }
 
         body {
@@ -58,7 +62,6 @@
             flex-direction: column;
         }
 
-        /* Main header styles */
         .header {
             position: sticky;
             top: 0;
@@ -75,14 +78,12 @@
             will-change: transform;
         }
 
-        /* Minimized header styles */
         .header.minimized {
             transform: translateY(-100%);
             opacity: 0;
             pointer-events: none;
         }
 
-        /* Floating header button */
         .floating-header-btn {
             position: fixed;
             top: 15px;
@@ -112,7 +113,6 @@
             font-size: 24px;
         }
 
-        /* Header dropdown */
         .header-dropdown {
             position: fixed;
             top: 80px;
@@ -239,6 +239,7 @@
             gap: 15px;
             background-color: var(--chat-bg);
             position: relative;
+            scroll-behavior: smooth;
         }
 
         .message {
@@ -480,7 +481,6 @@
             opacity: 0.8;
         }
 
-        /* Note-taking styles */
         .notes-dropdown {
             position: absolute;
             top: 60px;
@@ -538,7 +538,6 @@
             display: block;
         }
 
-        /* Inserted page styles with enhanced controls */
         .inserted-page {
             border: 1px dashed var(--primary-color);
             padding: 10px;
@@ -578,12 +577,14 @@
             position: absolute;
             top: -12px;
             right: -12px;
-            display: none;
+            display: flex;
             z-index: 10;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
         .inserted-page:hover .page-controls {
-            display: flex;
+            opacity: 1;
         }
 
         .page-control-btn {
@@ -612,7 +613,6 @@
             font-size: 12px;
         }
 
-        /* Crop overlay styles */
         .crop-overlay {
             position: fixed;
             top: 0;
@@ -621,7 +621,7 @@
             bottom: 0;
             background-color: rgba(0, 0, 0, 0.8);
             z-index: 10000;
-            display: flex;
+            display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -664,7 +664,6 @@
             background-color: var(--error-color);
         }
 
-        /* Quick action toolbar */
         .quick-toolbar {
             position: fixed;
             bottom: 80px;
@@ -705,7 +704,6 @@
             transform: scale(1.1);
         }
 
-        /* Drawing canvas */
         .drawing-canvas {
             position: fixed;
             top: 0;
@@ -725,12 +723,15 @@
             border-radius: 5px;
             padding: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            max-width: 90%;
         }
 
         .canvas-toolbar {
             display: flex;
             gap: 10px;
             margin-top: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .canvas-btn {
@@ -742,7 +743,6 @@
             cursor: pointer;
         }
 
-        /* Math equation input */
         .math-input {
             position: fixed;
             top: 50%;
@@ -774,7 +774,218 @@
             gap: 10px;
         }
 
-        /* Responsive adjustments */
+        .flashcard-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flashcard-container {
+            background-color: var(--chat-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .flashcard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .flashcard-title {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .flashcard-close {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .flashcard-list {
+            margin-bottom: 15px;
+        }
+
+        .flashcard-item {
+            background-color: var(--flashcard-color);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            color: var(--flashcard-text);
+        }
+
+        .flashcard-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .flashcard-item-delete {
+            background: none;
+            border: none;
+            color: var(--error-color);
+            cursor: pointer;
+        }
+
+        .flashcard-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .flashcard-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .flashcard-submit {
+            padding: 8px 15px;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .flashcard-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flashcard-viewer-container {
+            background-color: var(--flashcard-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            width: 90%;
+            max-width: 500px;
+            color: var(--flashcard-text);
+            text-align: center;
+        }
+
+        .flashcard-viewer-content {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .flashcard-viewer-controls {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .flashcard-viewer-btn {
+            padding: 8px 15px;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .flashcard-viewer-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .video-message {
+            max-width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .video-message video {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+
+        .ocr-result {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--chat-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .ocr-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .ocr-result-title {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .ocr-result-close {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .ocr-result-content {
+            white-space: pre-wrap;
+            margin-bottom: 15px;
+        }
+
+        .ocr-result-btns {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .ocr-result-btn {
+            padding: 8px 15px;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) {
             .inserted-page {
                 max-width: 100%;
@@ -790,6 +1001,15 @@
                 width: 36px;
                 height: 36px;
             }
+
+            .canvas-container {
+                width: 95%;
+            }
+
+            #draw-canvas {
+                width: 100%;
+                height: auto;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -798,7 +1018,6 @@
 
 <body>
     <div class="container">
-        <!-- Main Header -->
         <div class="header" id="main-header">
             <div class="header-info">
                 <div class="user-avatar">{{ user_name|first|upper }}</div>
@@ -810,6 +1029,10 @@
             <div class="header-controls">
                 <button type="button" class="control-btn" id="notes-btn" title="Take Notes" aria-label="Take Notes">
                     <i class="fas fa-pencil-alt"></i>
+                </button>
+                <button type="button" class="control-btn" id="flashcards-btn" title="Flashcards"
+                    aria-label="Flashcards">
+                    <i class="fas fa-layer-group"></i>
                 </button>
                 <form action="/logout" method="get" style="display:inline;">
                     <button type="submit" class="control-btn" title="Logout" aria-label="logout">
@@ -825,7 +1048,6 @@
                 </button>
             </div>
 
-            <!-- Notes Dropdown -->
             <div class="notes-dropdown" id="notes-dropdown">
                 <div class="notes-option" id="highlight-option">
                     <i class="fas fa-highlighter"></i> Highlighter
@@ -842,15 +1064,12 @@
             </div>
         </div>
 
-        <!-- Insert Marker -->
         <div class="insert-marker" id="insert-marker"></div>
 
-        <!-- Floating Header Button (hidden by default) -->
         <div class="floating-header-btn" id="floating-header-btn">
             <i class="fas fa-bars"></i>
         </div>
 
-        <!-- Header Dropdown (hidden by default) -->
         <div class="header-dropdown" id="header-dropdown">
             <div class="dropdown-item" id="dropdown-profile">
                 <i class="fas fa-user"></i>
@@ -864,6 +1083,10 @@
                 <i class="fas fa-trash-alt"></i>
                 <span>Clear Chat</span>
             </div>
+            <div class="dropdown-item" id="dropdown-flashcards">
+                <i class="fas fa-layer-group"></i>
+                <span>Flashcards</span>
+            </div>
             <form action="/logout" method="get">
                 <button type="submit" class="dropdown-item"
                     style="background: none; border: none; width: 100%; text-align: left;">
@@ -873,25 +1096,23 @@
             </form>
         </div>
 
-        <!-- Quick Action Toolbar -->
         <div class="quick-toolbar" id="quick-toolbar">
-            <button type="submit" class="quick-toolbar-btn" id="quick-highlight" title="Highlight">
+            <button type="button" class="quick-toolbar-btn" id="quick-highlight" title="Highlight">
                 <i class="fas fa-highlighter" aria-hidden="true"></i>
                 <span class="sr-only">Highlight</span>
             </button>
-            <button type="submit" class="quick-toolbar-btn" id="quick-insert" title="Insert Page">
+            <button type="button" class="quick-toolbar-btn" id="quick-insert" title="Insert Page">
                 <i class="fas fa-file-upload" aria-hidden="true"></i>
                 <span class="sr-only">Insert Page</span>
             </button>
-            <button type="submit" class="quick-toolbar-btn" id="quick-draw" title="Drawing">
+            <button type="button" class="quick-toolbar-btn" id="quick-draw" title="Drawing">
                 <i class="fas fa-paint-brush" aria-hidden="true"></i>
                 <span class="sr-only">Drawing</span>
             </button>
-            <button type="submit" class="quick-toolbar-btn" id="quick-math" title="Math Equation">
+            <button type="button" class="quick-toolbar-btn" id="quick-math" title="Math Equation">
                 <i class="fas fa-square-root-alt" aria-hidden="true"></i>
                 <span class="sr-only">Math Equation</span>
             </button>
-
         </div>
 
         <div class="chat-container">
@@ -910,45 +1131,86 @@
                 </button>
                 <textarea id="user-input" placeholder="Type your message here..." autocomplete="off"
                     rows="1"></textarea>
-                <button type="button" id="send-button" disabled aria-label="disabled Input">
+                <button type="button" id="send-button" disabled aria-label="Send Message">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Hidden file input for page insertion -->
     <input type="file" id="file-input" class="file-input" accept="image/*,.pdf" multiple>
 
-    <!-- Crop Overlay -->
-    <div class="crop-overlay" id="crop-overlay" style="display: none;">
+    <div class="crop-overlay" id="crop-overlay">
         <div class="crop-container">
             <img id="crop-image" class="crop-image" src="/" alt="Image to crop">
         </div>
         <div class="crop-controls">
-            <button type="submit" class="crop-btn" id="cancel-crop">Cancel</button>
-            <button type="submit" class="crop-btn" id="apply-crop">Crop</button>
+            <button type="button" class="crop-btn cancel" id="cancel-crop">Cancel</button>
+            <button type="button" class="crop-btn" id="apply-crop">Crop</button>
         </div>
     </div>
 
-    <!-- Drawing Canvas -->
     <div class="drawing-canvas" id="drawing-canvas">
         <div class="canvas-container">
             <canvas id="draw-canvas" width="800" height="600"></canvas>
             <div class="canvas-toolbar">
-                <button type="submit" class="canvas-btn" id="clear-canvas">Clear</button>
-                <button type="submit" class="canvas-btn" id="save-drawing">Save</button>
-                <button type="submit" class="canvas-btn" id="cancel-drawing">Cancel</button>
+                <button type="button" class="canvas-btn" id="clear-canvas">Clear</button>
+                <button type="button" class="canvas-btn" id="save-drawing">Save</button>
+                <button type="button" class="canvas-btn" id="cancel-drawing">Cancel</button>
             </div>
         </div>
     </div>
 
-    <!-- Math Equation Input -->
     <div class="math-input" id="math-input">
         <textarea placeholder="Enter LaTeX equation (e.g., E = mc^2)"></textarea>
         <div class="math-input-btns">
-            <button type="submit" class="crop-btn cancel" id="cancel-math">Cancel</button>
-            <button type="submit" class="crop-btn" id="insert-math">Insert</button>
+            <button type="button" class="crop-btn cancel" id="cancel-math">Cancel</button>
+            <button type="button" class="crop-btn" id="insert-math">Insert</button>
+        </div>
+    </div>
+
+    <div class="flashcard-modal" id="flashcard-modal">
+        <div class="flashcard-container">
+            <div class="flashcard-header">
+                <h3 class="flashcard-title">My Flashcards</h3>
+                <button type="submit" class="flashcard-close" id="flashcard-close">&times;</button>
+            </div>
+            <div class="flashcard-list" id="flashcard-list"></div>
+            <form class="flashcard-form" id="flashcard-form">
+                <input type="text" class="flashcard-input" id="flashcard-front" placeholder="Front (question)" required>
+                <input type="text" class="flashcard-input" id="flashcard-back" placeholder="Back (answer)" required>
+                <button type="submit" class="flashcard-submit">Add Flashcard</button>
+            </form>
+            <button type="submit" class="flashcard-submit" id="flashcard-study">Study Flashcards</button>
+        </div>
+    </div>
+
+    <div class="flashcard-viewer" id="flashcard-viewer">
+        <div class="flashcard-viewer-container">
+            <div class="flashcard-header">
+                <h3 class="flashcard-title">Flashcard Study</h3>
+                <button type="submit" class="flashcard-close" id="flashcard-viewer-close">&times;</button>
+            </div>
+            <div class="flashcard-viewer-content" id="flashcard-viewer-content">
+                <p>Loading flashcards...</p>
+            </div>
+            <div class="flashcard-viewer-controls">
+                <button type="submit" class="flashcard-viewer-btn" id="flashcard-prev" disabled>Previous</button>
+                <button type="submit" class="flashcard-viewer-btn" id="flashcard-flip">Flip</button>
+                <button type="submit" class="flashcard-viewer-btn" id="flashcard-next">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="ocr-result" id="ocr-result">
+        <div class="ocr-result-header">
+            <h3 class="ocr-result-title">Extracted Text</h3>
+            <button type="submit" class="ocr-result-close" id="ocr-result-close">&times;</button>
+        </div>
+        <div class="ocr-result-content" id="ocr-result-content"></div>
+        <div class="ocr-result-btns">
+            <button type="submit" class="ocr-result-btn" id="ocr-result-copy">Copy</button>
+            <button type="submit" class="ocr-result-btn" id="ocr-result-close-btn">Close</button>
         </div>
     </div>
 
@@ -956,544 +1218,817 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
     <script>
-        const chatBox = document.getElementById('chat-box');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-button');
-        const clearBtn = document.getElementById('clear-chat');
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const voiceBtn = document.getElementById('voice-btn');
-        const mainHeader = document.getElementById('main-header');
-        const floatingHeaderBtn = document.getElementById('floating-header-btn');
-        const headerDropdown = document.getElementById('header-dropdown');
-        const dropdownTheme = document.getElementById('dropdown-theme');
-        const dropdownClear = document.getElementById('dropdown-clear');
+        document.addEventListener('DOMContentLoaded', function () {
+            // DOM elements
+            const chatBox = document.getElementById('chat-box');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-button');
+            const clearBtn = document.getElementById('clear-chat');
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const voiceBtn = document.getElementById('voice-btn');
+            const mainHeader = document.getElementById('main-header');
+            const floatingHeaderBtn = document.getElementById('floating-header-btn');
+            const headerDropdown = document.getElementById('header-dropdown');
+            const dropdownTheme = document.getElementById('dropdown-theme');
+            const dropdownClear = document.getElementById('dropdown-clear');
+            const dropdownFlashcards = document.getElementById('dropdown-flashcards');
+            const notesBtn = document.getElementById('notes-btn');
+            const flashcardsBtn = document.getElementById('flashcards-btn');
+            const notesDropdown = document.getElementById('notes-dropdown');
+            const highlightOption = document.getElementById('highlight-option');
+            const insertPageOption = document.getElementById('insert-page-option');
+            const drawingOption = document.getElementById('drawing-option');
+            const mathOption = document.getElementById('math-option');
+            const fileInput = document.getElementById('file-input');
+            const insertMarker = document.getElementById('insert-marker');
+            const quickToolbar = document.getElementById('quick-toolbar');
+            const quickHighlight = document.getElementById('quick-highlight');
+            const quickInsert = document.getElementById('quick-insert');
+            const quickDraw = document.getElementById('quick-draw');
+            const quickMath = document.getElementById('quick-math');
+            const cropOverlay = document.getElementById('crop-overlay');
+            const cropImage = document.getElementById('crop-image');
+            const cancelCrop = document.getElementById('cancel-crop');
+            const applyCrop = document.getElementById('apply-crop');
+            const drawingCanvas = document.getElementById('drawing-canvas');
+            const drawCanvas = document.getElementById('draw-canvas');
+            const ctx = drawCanvas.getContext('2d');
+            const clearCanvas = document.getElementById('clear-canvas');
+            const saveDrawing = document.getElementById('save-drawing');
+            const cancelDrawing = document.getElementById('cancel-drawing');
+            const mathInput = document.getElementById('math-input');
+            const mathTextarea = mathInput.querySelector('textarea');
+            const cancelMath = document.getElementById('cancel-math');
+            const insertMath = document.getElementById('insert-math');
+            const flashcardModal = document.getElementById('flashcard-modal');
+            const flashcardClose = document.getElementById('flashcard-close');
+            const flashcardList = document.getElementById('flashcard-list');
+            const flashcardForm = document.getElementById('flashcard-form');
+            const flashcardFront = document.getElementById('flashcard-front');
+            const flashcardBack = document.getElementById('flashcard-back');
+            const flashcardStudy = document.getElementById('flashcard-study');
+            const flashcardViewer = document.getElementById('flashcard-viewer');
+            const flashcardViewerClose = document.getElementById('flashcard-viewer-close');
+            const flashcardViewerContent = document.getElementById('flashcard-viewer-content');
+            const flashcardPrev = document.getElementById('flashcard-prev');
+            const flashcardFlip = document.getElementById('flashcard-flip');
+            const flashcardNext = document.getElementById('flashcard-next');
+            const ocrResult = document.getElementById('ocr-result');
+            const ocrResultClose = document.getElementById('ocr-result-close');
+            const ocrResultContent = document.getElementById('ocr-result-content');
+            const ocrResultCopy = document.getElementById('ocr-result-copy');
+            const ocrResultCloseBtn = document.getElementById('ocr-result-close-btn');
 
-        // Note-taking elements
-        const notesBtn = document.getElementById('notes-btn');
-        const notesDropdown = document.getElementById('notes-dropdown');
-        const highlightOption = document.getElementById('highlight-option');
-        const insertPageOption = document.getElementById('insert-page-option');
-        const drawingOption = document.getElementById('drawing-option');
-        const mathOption = document.getElementById('math-option');
-        const fileInput = document.getElementById('file-input');
-        const insertMarker = document.getElementById('insert-marker');
+            // State variables
+            let isHighlightMode = false;
+            let isInsertMode = false;
+            let isDrawingMode = false;
+            let isMathMode = false;
+            let currentHighlightedElement = null;
+            let lastScrollTop = 0;
+            let isDropdownVisible = false;
+            let currentPageToCrop = null;
+            let isDragging = false;
+            let dragStartX = 0;
+            let dragStartY = 0;
+            let initialX = 0;
+            let initialY = 0;
+            let currentDraggedElement = null;
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+            let currentColor = '#000000';
+            let currentLineWidth = 5;
+            let flashcards = [];
+            let currentFlashcardIndex = 0;
+            let isFlashcardFlipped = false;
+            let speechSynthesis = window.speechSynthesis;
 
-        // Quick toolbar elements
-        const quickToolbar = document.getElementById('quick-toolbar');
-        const quickHighlight = document.getElementById('quick-highlight');
-        const quickInsert = document.getElementById('quick-insert');
-        const quickDraw = document.getElementById('quick-draw');
-        const quickMath = document.getElementById('quick-math');
+            // Initialize canvas
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = currentLineWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-        // Crop elements
-        const cropOverlay = document.getElementById('crop-overlay');
-        const cropImage = document.getElementById('crop-image');
-        const cancelCrop = document.getElementById('cancel-crop');
-        const applyCrop = document.getElementById('apply-crop');
+            // Add message to chat
+            const addMessage = (text, sender) => {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+                messageDiv.innerHTML = `<div class="markdown-content">${marked.parse(text)}</div><div class="timestamp ${sender === 'user' ? 'user-timestamp' : 'bot-timestamp'}">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
 
-        // Drawing elements
-        const drawingCanvas = document.getElementById('drawing-canvas');
-        const drawCanvas = document.getElementById('draw-canvas');
-        const ctx = drawCanvas.getContext('2d');
-        const clearCanvas = document.getElementById('clear-canvas');
-        const saveDrawing = document.getElementById('save-drawing');
-        const cancelDrawing = document.getElementById('cancel-drawing');
-
-        // Math elements
-        const mathInput = document.getElementById('math-input');
-        const mathTextarea = mathInput.querySelector('textarea');
-        const cancelMath = document.getElementById('cancel-math');
-        const insertMath = document.getElementById('insert-math');
-
-        // State variables
-        let isHighlightMode = false;
-        let isInsertMode = false;
-        let isDrawingMode = false;
-        let isMathMode = false;
-        let currentHighlightedElement = null;
-        let lastScrollTop = 0;
-        let isDropdownVisible = false;
-        let currentPageToCrop = null;
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let initialX = 0;
-        let initialY = 0;
-        let currentDraggedElement = null;
-
-        // Drawing state
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-        let currentColor = '#000000';
-        let currentLineWidth = 5;
-
-        // Initialize canvas
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
-        ctx.strokeStyle = currentColor;
-        ctx.lineWidth = currentLineWidth;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        // Add message to chat
-        const addMessage = (text, sender) => {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
-            messageDiv.innerHTML = `<div class="markdown-content">${marked.parse(text)}</div><div class="timestamp ${sender === 'user' ? 'user-timestamp' : 'bot-timestamp'}">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
-            chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            // Render any LaTeX in the new message
-            renderMathInElement(messageDiv, {
-                delimiters: [
-                    { left: '$$', right: '$$', display: true },
-                    { left: '$', right: '$', display: false },
-                    { left: '\\(', right: '\\)', display: false },
-                    { left: '\\[', right: '\\]', display: true }
-                ],
-                throwOnError: false
-            });
-
-            return messageDiv;
-        };
-
-        // Send message to backend
-        const sendMessage = async () => {
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            addMessage(message, 'user');
-            userInput.value = '';
-            sendBtn.disabled = true;
-
-            // Show typing indicator
-            const typingDiv = document.createElement('div');
-            typingDiv.classList.add('typing-indicator');
-            typingDiv.innerHTML = `
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            `;
-            chatBox.appendChild(typingDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            try {
-                const res = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
+                renderMathInElement(messageDiv, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false },
+                        { left: '\\(', right: '\\)', display: false },
+                        { left: '\\[', right: '\\]', display: true }
+                    ],
+                    throwOnError: false
                 });
 
-                const data = await res.json();
-                chatBox.removeChild(typingDiv);
-                addMessage(data.reply, 'bot');
-            } catch (e) {
-                chatBox.removeChild(typingDiv);
-                addMessage('⚠️ Error sending message.', 'bot');
-            }
-
-            userInput.focus();
-        };
-
-        // Event listeners
-        sendBtn.addEventListener('click', sendMessage);
-
-        userInput.addEventListener('input', () => {
-            sendBtn.disabled = !userInput.value.trim();
-            // Auto-resize textarea
-            userInput.style.height = 'auto';
-            userInput.style.height = (userInput.scrollHeight) + 'px';
-        });
-
-        userInput.addEventListener('keypress', e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-
-        clearBtn.addEventListener('click', async () => {
-            await fetch('/history', { method: 'DELETE' });
-            chatBox.innerHTML = '';
-            // Add new welcome message
-            addMessage(`Hello ${document.querySelector('.user-details h2').textContent}! How can I help you today?`, 'bot');
-        });
-
-        // Voice recognition
-        if ('webkitSpeechRecognition' in window) {
-            const recognition = new webkitSpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
-            voiceBtn.onclick = () => {
-                voiceBtn.classList.add('voice-recording');
-                recognition.start();
+                return messageDiv;
             };
 
-            recognition.onresult = (e) => {
-                const transcript = e.results[0][0].transcript;
-                userInput.value += transcript + ' ';
-                sendBtn.disabled = !userInput.value.trim();
+            // Add video message to chat
+            const addVideoMessage = (videoUrl) => {
+                const videoDiv = document.createElement('div');
+                videoDiv.classList.add('message', 'bot-message', 'video-message');
+
+                const videoElement = document.createElement('video');
+                videoElement.src = videoUrl;
+                videoElement.controls = true;
+                videoElement.style.maxWidth = '100%';
+                videoElement.style.borderRadius = '8px';
+
+                const timestamp = document.createElement('div');
+                timestamp.classList.add('timestamp', 'bot-timestamp');
+                timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                videoDiv.appendChild(videoElement);
+                videoDiv.appendChild(timestamp);
+                chatBox.appendChild(videoDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            };
+
+            // Generate video
+            const generateVideo = async (prompt) => {
+                const loadingMessage = addMessage(`Generating video for: "${prompt}"...`, 'bot');
+
+                try {
+                    const response = await fetch('/generate_video', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.video_url) {
+                        chatBox.removeChild(loadingMessage);
+                        addVideoMessage(data.video_url);
+                    } else {
+                        chatBox.removeChild(loadingMessage);
+                        addMessage('Error generating video: ' + (data.error || 'Unknown error'), 'bot');
+                    }
+                } catch (error) {
+                    chatBox.removeChild(loadingMessage);
+                    addMessage('Failed to generate video: ' + error.message, 'bot');
+                }
+            };
+
+            // Send message to backend
+            const sendMessage = async () => {
+                const message = userInput.value.trim();
+                if (!message) return;
+
+                // Check for video generation command
+                if (message.toLowerCase().startsWith('/video')) {
+                    const prompt = message.substring(6).trim();
+                    if (prompt) {
+                        await generateVideo(prompt);
+                    } else {
+                        addMessage("Please provide a prompt for video generation. Example: /video a cat playing piano", 'bot');
+                    }
+                    userInput.value = '';
+                    return;
+                }
+
+                addMessage(message, 'user');
+                userInput.value = '';
+                sendBtn.disabled = true;
+
+                const typingDiv = document.createElement('div');
+                typingDiv.classList.add('typing-indicator');
+                typingDiv.innerHTML = `
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                `;
+                chatBox.appendChild(typingDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                try {
+                    const res = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message })
+                    });
+
+                    const data = await res.json();
+                    chatBox.removeChild(typingDiv);
+                    const botMessage = addMessage(data.reply, 'bot');
+
+                    // Add text-to-speech for bot messages
+                    if (speechSynthesis) {
+                        const utterance = new SpeechSynthesisUtterance(data.reply);
+                        speechSynthesis.speak(utterance);
+                    }
+                } catch (e) {
+                    chatBox.removeChild(typingDiv);
+                    addMessage('⚠️ Error sending message.', 'bot');
+                }
+
                 userInput.focus();
-                voiceBtn.classList.remove('voice-recording');
             };
 
-            recognition.onerror = () => {
-                voiceBtn.classList.remove('voice-recording');
-            };
+            // Event listeners
+            sendBtn.addEventListener('click', sendMessage);
 
-            recognition.onend = () => {
-                voiceBtn.classList.remove('voice-recording');
-            };
-        } else {
-            voiceBtn.disabled = true;
-            voiceBtn.title = "Voice input not supported";
-        }
+            userInput.addEventListener('input', () => {
+                sendBtn.disabled = !userInput.value.trim();
+                userInput.style.height = 'auto';
+                userInput.style.height = (userInput.scrollHeight) + 'px';
+            });
 
-        // Theme toggle
-        const setTheme = (theme) => {
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark-theme');
-                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
-                themeToggleBtn.title = "Switch to Light Mode";
-                dropdownTheme.querySelector('i').className = 'fas fa-sun';
-                dropdownTheme.querySelector('span').textContent = 'Switch to Light Mode';
-            } else {
-                document.documentElement.classList.remove('dark-theme');
-                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
-                themeToggleBtn.title = "Switch to Dark Mode";
-                dropdownTheme.querySelector('i').className = 'fas fa-moon';
-                dropdownTheme.querySelector('span').textContent = 'Switch to Dark Mode';
-            }
-            localStorage.setItem('theme', theme);
-        };
-
-        themeToggleBtn.addEventListener('click', () => {
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            setTheme(currentTheme === 'light' ? 'dark' : 'light');
-        });
-
-        // Load theme
-        setTheme(localStorage.getItem('theme') || 'light');
-
-        // Load chat history
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const res = await fetch('/history');
-                const history = await res.json();
-
-                // Filter out system messages
-                const userMessages = history.filter(msg => msg.startsWith('User:'));
-                const botMessages = history.filter(msg => msg.startsWith('Assistant:'));
-
-                // Add messages to chat
-                for (let i = 0; i < userMessages.length; i++) {
-                    const userMsg = userMessages[i].replace('User:', '').trim();
-                    const botMsg = botMessages[i] ? botMessages[i].replace('Assistant:', '').trim() : '';
-
-                    if (userMsg) addMessage(userMsg, 'user');
-                    if (botMsg) addMessage(botMsg, 'bot');
+            userInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
                 }
-            } catch {
-                console.error('Failed to load chat history');
-            }
-            userInput.focus();
-        });
+            });
 
-        // Scroll-responsive header
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            clearBtn.addEventListener('click', async () => {
+                await fetch('/history', { method: 'DELETE' });
+                chatBox.innerHTML = '';
+                addMessage(`Hello ${document.querySelector('.user-details h2').textContent}! How can I help you today?`, 'bot');
+            });
 
-            if (scrollTop > lastScrollTop && scrollTop > 100) {
-                // Scrolling down
-                mainHeader.classList.add('minimized');
-                floatingHeaderBtn.classList.add('visible');
-                quickToolbar.classList.add('visible');
-            } else if (scrollTop < lastScrollTop && scrollTop < 100) {
-                // Scrolling up near top
-                mainHeader.classList.remove('minimized');
-                floatingHeaderBtn.classList.remove('visible');
-                headerDropdown.classList.remove('visible');
-                quickToolbar.classList.remove('visible');
-                isDropdownVisible = false;
-            } else if (scrollTop < lastScrollTop) {
-                // Scrolling up
-                mainHeader.classList.remove('minimized');
-                floatingHeaderBtn.classList.remove('visible');
-                quickToolbar.classList.add('visible');
-            }
+            // Voice recognition
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.continuous = false;
+                recognition.interimResults = false;
 
-            lastScrollTop = scrollTop;
-        });
+                voiceBtn.onclick = () => {
+                    voiceBtn.classList.add('voice-recording');
+                    recognition.start();
+                };
 
-        // Floating button functionality
-        floatingHeaderBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            isDropdownVisible = !isDropdownVisible;
-            headerDropdown.classList.toggle('visible', isDropdownVisible);
-        });
+                recognition.onresult = (e) => {
+                    const transcript = e.results[0][0].transcript;
+                    userInput.value += transcript + ' ';
+                    sendBtn.disabled = !userInput.value.trim();
+                    userInput.focus();
+                    voiceBtn.classList.remove('voice-recording');
+                };
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (isDropdownVisible &&
-                !floatingHeaderBtn.contains(e.target) &&
-                !headerDropdown.contains(e.target)) {
-                headerDropdown.classList.remove('visible');
-                isDropdownVisible = false;
-            }
-        });
+                recognition.onerror = () => {
+                    voiceBtn.classList.remove('voice-recording');
+                };
 
-        // Dropdown functionality
-        dropdownTheme.addEventListener('click', () => {
-            themeToggleBtn.click();
-            headerDropdown.classList.remove('visible');
-            isDropdownVisible = false;
-        });
-
-        dropdownClear.addEventListener('click', () => {
-            clearBtn.click();
-            headerDropdown.classList.remove('visible');
-            isDropdownVisible = false;
-        });
-
-        // Auto-scroll to bottom on new messages
-        const observer = new MutationObserver(() => {
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-        observer.observe(chatBox, { childList: true });
-
-        // Note-taking functionality
-        notesBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notesDropdown.classList.toggle('visible');
-        });
-
-        // Close notes dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!notesBtn.contains(e.target) && !notesDropdown.contains(e.target)) {
-                notesDropdown.classList.remove('visible');
-            }
-        });
-
-        // Highlight option
-        const toggleHighlightMode = () => {
-            isHighlightMode = !isHighlightMode;
-            isInsertMode = false;
-            isDrawingMode = false;
-            isMathMode = false;
-            insertMarker.classList.remove('visible');
-            drawingCanvas.style.display = 'none';
-            mathInput.style.display = 'none';
-
-            if (isHighlightMode) {
-                highlightOption.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-                quickHighlight.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-                document.body.style.cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23000\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M15.71 3.29a1 1 0 0 0-1.42 0l-10 10a1 1 0 0 0 0 1.42l4 4a1 1 0 0 0 1.42 0l10-10a1 1 0 0 0 0-1.42z\'/></svg>") 0 24, auto';
+                recognition.onend = () => {
+                    voiceBtn.classList.remove('voice-recording');
+                };
             } else {
-                highlightOption.style.backgroundColor = '';
-                quickHighlight.style.backgroundColor = '';
-                document.body.style.cursor = '';
+                voiceBtn.disabled = true;
+                voiceBtn.title = "Voice input not supported";
             }
 
-            notesDropdown.classList.remove('visible');
-        };
+            // Theme toggle
+            const setTheme = (theme) => {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-theme');
+                    themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+                    themeToggleBtn.title = "Switch to Light Mode";
+                    dropdownTheme.querySelector('i').className = 'fas fa-sun';
+                    dropdownTheme.querySelector('span').textContent = 'Switch to Light Mode';
+                } else {
+                    document.documentElement.classList.remove('dark-theme');
+                    themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+                    themeToggleBtn.title = "Switch to Dark Mode";
+                    dropdownTheme.querySelector('i').className = 'fas fa-moon';
+                    dropdownTheme.querySelector('span').textContent = 'Switch to Dark Mode';
+                }
+                localStorage.setItem('theme', theme);
+            };
 
-        highlightOption.addEventListener('click', toggleHighlightMode);
-        quickHighlight.addEventListener('click', toggleHighlightMode);
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                setTheme(currentTheme === 'light' ? 'dark' : 'light');
+            });
 
-        // Insert page option
-        const toggleInsertMode = () => {
-            isInsertMode = !isInsertMode;
-            isHighlightMode = false;
-            isDrawingMode = false;
-            isMathMode = false;
-            drawingCanvas.style.display = 'none';
-            mathInput.style.display = 'none';
+            // Load theme
+            setTheme(localStorage.getItem('theme') || 'light');
 
-            if (isInsertMode) {
-                insertPageOption.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-                quickInsert.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-                document.body.style.cursor = 'cell';
-            } else {
-                insertPageOption.style.backgroundColor = '';
-                quickInsert.style.backgroundColor = '';
-                document.body.style.cursor = '';
+            // Load chat history
+            const loadChatHistory = async () => {
+                try {
+                    const res = await fetch('/history');
+                    const history = await res.json();
+
+                    const userMessages = history.filter(msg => msg.startsWith('User:'));
+                    const botMessages = history.filter(msg => msg.startsWith('Assistant:'));
+
+                    for (let i = 0; i < userMessages.length; i++) {
+                        const userMsg = userMessages[i].replace('User:', '').trim();
+                        const botMsg = botMessages[i] ? botMessages[i].replace('Assistant:', '').trim() : '';
+
+                        if (userMsg) addMessage(userMsg, 'user');
+                        if (botMsg) addMessage(botMsg, 'bot');
+                    }
+                } catch {
+                    console.error('Failed to load chat history');
+                }
+                userInput.focus();
+            };
+
+            loadChatHistory();
+
+            // Scroll-responsive header
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (scrollTop > lastScrollTop && scrollTop > 100) {
+                    mainHeader.classList.add('minimized');
+                    floatingHeaderBtn.classList.add('visible');
+                    quickToolbar.classList.add('visible');
+                } else if (scrollTop < lastScrollTop && scrollTop < 100) {
+                    mainHeader.classList.remove('minimized');
+                    floatingHeaderBtn.classList.remove('visible');
+                    headerDropdown.classList.remove('visible');
+                    quickToolbar.classList.remove('visible');
+                    isDropdownVisible = false;
+                } else if (scrollTop < lastScrollTop) {
+                    mainHeader.classList.remove('minimized');
+                    floatingHeaderBtn.classList.remove('visible');
+                    quickToolbar.classList.add('visible');
+                }
+
+                lastScrollTop = scrollTop;
+            });
+
+            // Floating button functionality
+            floatingHeaderBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                isDropdownVisible = !isDropdownVisible;
+                headerDropdown.classList.toggle('visible', isDropdownVisible);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (isDropdownVisible &&
+                    !floatingHeaderBtn.contains(e.target) &&
+                    !headerDropdown.contains(e.target)) {
+                    headerDropdown.classList.remove('visible');
+                    isDropdownVisible = false;
+                }
+            });
+
+            // Dropdown functionality
+            dropdownTheme.addEventListener('click', () => {
+                themeToggleBtn.click();
+                headerDropdown.classList.remove('visible');
+                isDropdownVisible = false;
+            });
+
+            dropdownClear.addEventListener('click', () => {
+                clearBtn.click();
+                headerDropdown.classList.remove('visible');
+                isDropdownVisible = false;
+            });
+
+            dropdownFlashcards.addEventListener('click', () => {
+                flashcardsBtn.click();
+                headerDropdown.classList.remove('visible');
+                isDropdownVisible = false;
+            });
+
+            // Flashcard functionality
+            const loadFlashcards = async () => {
+                try {
+                    const res = await fetch('/flashcards');
+                    flashcards = await res.json();
+                    renderFlashcards();
+                } catch (e) {
+                    console.error('Failed to load flashcards', e);
+                }
+            };
+
+            const renderFlashcards = () => {
+                flashcardList.innerHTML = '';
+                flashcards.forEach(card => {
+                    const cardElement = document.createElement('div');
+                    cardElement.classList.add('flashcard-item');
+                    cardElement.innerHTML = `
+                        <div class="flashcard-item-header">
+                            <strong>${card.front}</strong>
+                            <button class="flashcard-item-delete" data-id="${card.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div>${card.back}</div>
+                    `;
+                    flashcardList.appendChild(cardElement);
+                });
+
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.flashcard-item-delete').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const cardId = btn.dataset.id;
+                        try {
+                            await fetch('/flashcards', {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: cardId })
+                            });
+                            loadFlashcards();
+                        } catch (e) {
+                            console.error('Failed to delete flashcard', e);
+                        }
+                    });
+                });
+            };
+
+            flashcardsBtn.addEventListener('click', () => {
+                flashcardModal.style.display = 'flex';
+                loadFlashcards();
+            });
+
+            flashcardClose.addEventListener('click', () => {
+                flashcardModal.style.display = 'none';
+            });
+
+            flashcardForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const front = flashcardFront.value.trim();
+                const back = flashcardBack.value.trim();
+
+                if (!front || !back) return;
+
+                try {
+                    const res = await fetch('/flashcards', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ front, back })
+                    });
+                    const newCard = await res.json();
+                    flashcards.push(newCard);
+                    renderFlashcards();
+                    flashcardFront.value = '';
+                    flashcardBack.value = '';
+                    flashcardFront.focus();
+                } catch (e) {
+                    console.error('Failed to add flashcard', e);
+                }
+            });
+
+            flashcardStudy.addEventListener('click', () => {
+                if (flashcards.length === 0) {
+                    alert('No flashcards to study!');
+                    return;
+                }
+
+                flashcardModal.style.display = 'none';
+                flashcardViewer.style.display = 'flex';
+                currentFlashcardIndex = 0;
+                isFlashcardFlipped = false;
+                updateFlashcardViewer();
+            });
+
+            flashcardViewerClose.addEventListener('click', () => {
+                flashcardViewer.style.display = 'none';
+            });
+
+            const updateFlashcardViewer = () => {
+                const card = flashcards[currentFlashcardIndex];
+                flashcardViewerContent.innerHTML = isFlashcardFlipped
+                    ? `<p>${card.back}</p>`
+                    : `<p>${card.front}</p>`;
+
+                flashcardPrev.disabled = currentFlashcardIndex === 0;
+                flashcardNext.disabled = currentFlashcardIndex === flashcards.length - 1;
+            };
+
+            flashcardPrev.addEventListener('click', () => {
+                if (currentFlashcardIndex > 0) {
+                    currentFlashcardIndex--;
+                    isFlashcardFlipped = false;
+                    updateFlashcardViewer();
+                }
+            });
+
+            flashcardFlip.addEventListener('click', () => {
+                isFlashcardFlipped = !isFlashcardFlipped;
+                updateFlashcardViewer();
+            });
+
+            flashcardNext.addEventListener('click', () => {
+                if (currentFlashcardIndex < flashcards.length - 1) {
+                    currentFlashcardIndex++;
+                    isFlashcardFlipped = false;
+                    updateFlashcardViewer();
+                }
+            });
+
+            // Note-taking functionality
+            notesBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notesDropdown.classList.toggle('visible');
+            });
+
+            // Close notes dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!notesBtn.contains(e.target) && !notesDropdown.contains(e.target)) {
+                    notesDropdown.classList.remove('visible');
+                }
+            });
+
+            // Highlight option
+            const toggleHighlightMode = () => {
+                isHighlightMode = !isHighlightMode;
+                isInsertMode = false;
+                isDrawingMode = false;
+                isMathMode = false;
                 insertMarker.classList.remove('visible');
-            }
-
-            notesDropdown.classList.remove('visible');
-        };
-
-        insertPageOption.addEventListener('click', toggleInsertMode);
-        quickInsert.addEventListener('click', toggleInsertMode);
-
-        // Drawing option
-        const toggleDrawingMode = () => {
-            isDrawingMode = !isDrawingMode;
-            isHighlightMode = false;
-            isInsertMode = false;
-            isMathMode = false;
-            insertMarker.classList.remove('visible');
-            mathInput.style.display = 'none';
-
-            if (isDrawingMode) {
-                drawingOption.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-                quickDraw.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-                drawingCanvas.style.display = 'flex';
-                // Reset canvas
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
-                ctx.strokeStyle = currentColor;
-                ctx.lineWidth = currentLineWidth;
-            } else {
-                drawingOption.style.backgroundColor = '';
-                quickDraw.style.backgroundColor = '';
                 drawingCanvas.style.display = 'none';
-            }
-
-            notesDropdown.classList.remove('visible');
-        };
-
-        drawingOption.addEventListener('click', toggleDrawingMode);
-        quickDraw.addEventListener('click', toggleDrawingMode);
-
-        // Math equation option
-        const toggleMathMode = () => {
-            isMathMode = !isMathMode;
-            isHighlightMode = false;
-            isInsertMode = false;
-            isDrawingMode = false;
-            insertMarker.classList.remove('visible');
-            drawingCanvas.style.display = 'none';
-
-            if (isMathMode) {
-                mathOption.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-                quickMath.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-                mathInput.style.display = 'flex';
-                mathTextarea.value = '';
-                mathTextarea.focus();
-            } else {
-                mathOption.style.backgroundColor = '';
-                quickMath.style.backgroundColor = '';
                 mathInput.style.display = 'none';
-            }
 
-            notesDropdown.classList.remove('visible');
-        };
+                if (isHighlightMode) {
+                    highlightOption.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    quickHighlight.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    document.body.style.cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23000\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M15.71 3.29a1 1 0 0 0-1.42 0l-10 10a1 1 0 0 0 0 1.42l4 4a1 1 0 0 0 1.42 0l10-10a1 1 0 0 0 0-1.42z\'/></svg>") 0 24, auto';
+                } else {
+                    highlightOption.style.backgroundColor = '';
+                    quickHighlight.style.backgroundColor = '';
+                    document.body.style.cursor = '';
+                }
 
-        mathOption.addEventListener('click', toggleMathMode);
-        quickMath.addEventListener('click', toggleMathMode);
+                notesDropdown.classList.remove('visible');
+            };
 
-        // Handle highlighting
-        chatBox.addEventListener('mouseover', (e) => {
-            if (!isHighlightMode) return;
+            highlightOption.addEventListener('click', toggleHighlightMode);
+            quickHighlight.addEventListener('click', toggleHighlightMode);
 
-            const messageContent = e.target.closest('.markdown-content');
-            if (messageContent) {
-                if (currentHighlightedElement) {
+            // Insert page option
+            const toggleInsertMode = () => {
+                isInsertMode = !isInsertMode;
+                isHighlightMode = false;
+                isDrawingMode = false;
+                isMathMode = false;
+                drawingCanvas.style.display = 'none';
+                mathInput.style.display = 'none';
+
+                if (isInsertMode) {
+                    insertPageOption.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    quickInsert.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    document.body.style.cursor = 'cell';
+                } else {
+                    insertPageOption.style.backgroundColor = '';
+                    quickInsert.style.backgroundColor = '';
+                    document.body.style.cursor = '';
+                    insertMarker.classList.remove('visible');
+                }
+
+                notesDropdown.classList.remove('visible');
+            };
+
+            insertPageOption.addEventListener('click', toggleInsertMode);
+            quickInsert.addEventListener('click', toggleInsertMode);
+
+            // Drawing option
+            const toggleDrawingMode = () => {
+                isDrawingMode = !isDrawingMode;
+                isHighlightMode = false;
+                isInsertMode = false;
+                isMathMode = false;
+                insertMarker.classList.remove('visible');
+                mathInput.style.display = 'none';
+
+                if (isDrawingMode) {
+                    drawingOption.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    quickDraw.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    drawingCanvas.style.display = 'flex';
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+                    ctx.strokeStyle = currentColor;
+                    ctx.lineWidth = currentLineWidth;
+                } else {
+                    drawingOption.style.backgroundColor = '';
+                    quickDraw.style.backgroundColor = '';
+                    drawingCanvas.style.display = 'none';
+                }
+
+                notesDropdown.classList.remove('visible');
+            };
+
+            drawingOption.addEventListener('click', toggleDrawingMode);
+            quickDraw.addEventListener('click', toggleDrawingMode);
+
+            // Math equation option
+            const toggleMathMode = () => {
+                isMathMode = !isMathMode;
+                isHighlightMode = false;
+                isInsertMode = false;
+                isDrawingMode = false;
+                insertMarker.classList.remove('visible');
+                drawingCanvas.style.display = 'none';
+
+                if (isMathMode) {
+                    mathOption.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    quickMath.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    mathInput.style.display = 'flex';
+                    mathTextarea.value = '';
+                    mathTextarea.focus();
+                } else {
+                    mathOption.style.backgroundColor = '';
+                    quickMath.style.backgroundColor = '';
+                    mathInput.style.display = 'none';
+                }
+
+                notesDropdown.classList.remove('visible');
+            };
+
+            mathOption.addEventListener('click', toggleMathMode);
+            quickMath.addEventListener('click', toggleMathMode);
+
+            // Handle highlighting
+            chatBox.addEventListener('mouseover', (e) => {
+                if (!isHighlightMode) return;
+
+                const messageContent = e.target.closest('.markdown-content');
+                if (messageContent) {
+                    if (currentHighlightedElement) {
+                        currentHighlightedElement.classList.remove('highlighted');
+                    }
+                    messageContent.classList.add('highlighted');
+                    currentHighlightedElement = messageContent;
+                }
+            });
+
+            chatBox.addEventListener('mouseout', (e) => {
+                if (!isHighlightMode || !currentHighlightedElement) return;
+
+                const relatedTarget = e.relatedTarget;
+                if (!relatedTarget || !currentHighlightedElement.contains(relatedTarget)) {
                     currentHighlightedElement.classList.remove('highlighted');
+                    currentHighlightedElement = null;
                 }
-                messageContent.classList.add('highlighted');
-                currentHighlightedElement = messageContent;
-            }
-        });
+            });
 
-        chatBox.addEventListener('mouseout', (e) => {
-            if (!isHighlightMode || !currentHighlightedElement) return;
+            chatBox.addEventListener('click', (e) => {
+                if (!isHighlightMode) return;
 
-            const relatedTarget = e.relatedTarget;
-            if (!relatedTarget || !currentHighlightedElement.contains(relatedTarget)) {
-                currentHighlightedElement.classList.remove('highlighted');
-                currentHighlightedElement = null;
-            }
-        });
-
-        // Handle click to keep highlight
-        chatBox.addEventListener('click', (e) => {
-            if (!isHighlightMode) return;
-
-            const messageContent = e.target.closest('.markdown-content');
-            if (messageContent) {
-                if (currentHighlightedElement && currentHighlightedElement !== messageContent) {
-                    currentHighlightedElement.classList.remove('highlighted');
+                const messageContent = e.target.closest('.markdown-content');
+                if (messageContent) {
+                    if (currentHighlightedElement && currentHighlightedElement !== messageContent) {
+                        currentHighlightedElement.classList.remove('highlighted');
+                    }
+                    messageContent.classList.toggle('highlighted');
+                    currentHighlightedElement = messageContent.classList.contains('highlighted') ? messageContent : null;
                 }
-                messageContent.classList.toggle('highlighted');
-                currentHighlightedElement = messageContent.classList.contains('highlighted') ? messageContent : null;
-            }
-        });
+            });
 
-        // Handle page insertion
-        chatBox.addEventListener('mousemove', (e) => {
-            if (!isInsertMode) return;
+            // Handle page insertion
+            chatBox.addEventListener('mousemove', (e) => {
+                if (!isInsertMode) return;
 
-            const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
-            let insertPosition = null;
+                const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
+                let insertPosition = null;
 
-            for (let i = 0; i < messages.length; i++) {
-                const rect = messages[i].getBoundingClientRect();
-                if (e.clientY < rect.top + rect.height / 2) {
-                    insertPosition = messages[i];
-                    break;
+                for (let i = 0; i < messages.length; i++) {
+                    const rect = messages[i].getBoundingClientRect();
+                    if (e.clientY < rect.top + rect.height / 2) {
+                        insertPosition = messages[i];
+                        break;
+                    }
                 }
-            }
 
-            if (insertPosition) {
-                const rect = insertPosition.getBoundingClientRect();
-                insertMarker.style.top = `${rect.top - 1}px`;
-                insertMarker.style.left = `${rect.left}px`;
-                insertMarker.style.width = `${rect.width}px`;
-                insertMarker.classList.add('visible');
-            } else {
-                const lastMessage = messages[messages.length - 1];
-                if (lastMessage) {
-                    const rect = lastMessage.getBoundingClientRect();
-                    insertMarker.style.top = `${rect.bottom - 1}px`;
+                if (insertPosition) {
+                    const rect = insertPosition.getBoundingClientRect();
+                    insertMarker.style.top = `${rect.top - 1}px`;
                     insertMarker.style.left = `${rect.left}px`;
                     insertMarker.style.width = `${rect.width}px`;
                     insertMarker.classList.add('visible');
+                } else {
+                    const lastMessage = messages[messages.length - 1];
+                    if (lastMessage) {
+                        const rect = lastMessage.getBoundingClientRect();
+                        insertMarker.style.top = `${rect.bottom - 1}px`;
+                        insertMarker.style.left = `${rect.left}px`;
+                        insertMarker.style.width = `${rect.width}px`;
+                        insertMarker.classList.add('visible');
+                    }
                 }
-            }
-        });
+            });
 
-        chatBox.addEventListener('click', (e) => {
-            if (!isInsertMode) return;
+            chatBox.addEventListener('click', (e) => {
+                if (!isInsertMode) return;
 
-            fileInput.click();
-        });
+                fileInput.click();
+            });
 
-        // Handle file insertion
-        fileInput.addEventListener('change', (e) => {
-            if (!isInsertMode) return;
+            // Handle file insertion
+            fileInput.addEventListener('change', (e) => {
+                if (!isInsertMode) return;
 
-            const files = Array.from(e.target.files);
-            if (files.length === 0) return;
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
 
-            const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
-            const markerRect = insertMarker.getBoundingClientRect();
-            let insertBeforeElement = null;
+                const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
+                const markerRect = insertMarker.getBoundingClientRect();
+                let insertBeforeElement = null;
 
-            for (let i = 0; i < messages.length; i++) {
-                const rect = messages[i].getBoundingClientRect();
-                if (markerRect.top < rect.top + rect.height / 2) {
-                    insertBeforeElement = messages[i];
-                    break;
+                for (let i = 0; i < messages.length; i++) {
+                    const rect = messages[i].getBoundingClientRect();
+                    if (markerRect.top < rect.top + rect.height / 2) {
+                        insertBeforeElement = messages[i];
+                        break;
+                    }
                 }
-            }
 
-            files.forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
+                files.forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const insertedDiv = document.createElement('div');
+                            insertedDiv.classList.add('inserted-page');
+                            insertedDiv.setAttribute('draggable', 'true');
+
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.alt = "Inserted page";
+
+                            const timestamp = document.createElement('div');
+                            timestamp.classList.add('page-timestamp');
+                            timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                            const controls = document.createElement('div');
+                            controls.classList.add('page-controls');
+
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.classList.add('page-control-btn');
+                            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                            deleteBtn.title = "Delete";
+                            deleteBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                insertedDiv.remove();
+                            });
+
+                            const cropBtn = document.createElement('button');
+                            cropBtn.classList.add('page-control-btn');
+                            cropBtn.innerHTML = '<i class="fas fa-crop"></i>';
+                            cropBtn.title = "Crop";
+                            cropBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                currentPageToCrop = insertedDiv;
+                                cropImage.src = img.src;
+                                cropOverlay.style.display = 'flex';
+                            });
+
+                            const ocrBtn = document.createElement('button');
+                            ocrBtn.classList.add('page-control-btn');
+                            ocrBtn.innerHTML = '<i class="fas fa-text-height"></i>';
+                            ocrBtn.title = "Extract Text";
+                            ocrBtn.addEventListener('click', async (e) => {
+                                e.stopPropagation();
+                                try {
+                                    const response = await fetch('/extract_text', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ image: img.src })
+                                    });
+                                    const data = await response.json();
+                                    if (data.text) {
+                                        ocrResultContent.textContent = data.text;
+                                        ocrResult.style.display = 'flex';
+                                    } else {
+                                        alert('No text found in image');
+                                    }
+                                } catch (error) {
+                                    console.error('OCR error:', error);
+                                    alert('Failed to extract text');
+                                }
+                            });
+
+                            controls.appendChild(cropBtn);
+                            controls.appendChild(ocrBtn);
+                            controls.appendChild(deleteBtn);
+
+                            insertedDiv.appendChild(img);
+                            insertedDiv.appendChild(timestamp);
+                            insertedDiv.appendChild(controls);
+
+                            if (insertBeforeElement) {
+                                chatBox.insertBefore(insertedDiv, insertBeforeElement);
+                            } else {
+                                chatBox.appendChild(insertedDiv);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    } else if (file.type === 'application/pdf') {
                         const insertedDiv = document.createElement('div');
                         insertedDiv.classList.add('inserted-page');
                         insertedDiv.setAttribute('draggable', 'true');
 
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.alt = "Inserted page";
+                        const p = document.createElement('p');
+                        p.textContent = `PDF: ${file.name}`;
 
                         const timestamp = document.createElement('div');
                         timestamp.classList.add('page-timestamp');
@@ -1511,21 +2046,9 @@
                             insertedDiv.remove();
                         });
 
-                        const cropBtn = document.createElement('button');
-                        cropBtn.classList.add('page-control-btn');
-                        cropBtn.innerHTML = '<i class="fas fa-crop"></i>';
-                        cropBtn.title = "Crop";
-                        cropBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            currentPageToCrop = insertedDiv;
-                            cropImage.src = img.src;
-                            cropOverlay.style.display = 'flex';
-                        });
-
-                        controls.appendChild(cropBtn);
                         controls.appendChild(deleteBtn);
 
-                        insertedDiv.appendChild(img);
+                        insertedDiv.appendChild(p);
                         insertedDiv.appendChild(timestamp);
                         insertedDiv.appendChild(controls);
 
@@ -1534,421 +2057,378 @@
                         } else {
                             chatBox.appendChild(insertedDiv);
                         }
-                    };
-                    reader.readAsDataURL(file);
-                } else if (file.type === 'application/pdf') {
-                    // For PDFs, we'll just show the filename
-                    const insertedDiv = document.createElement('div');
-                    insertedDiv.classList.add('inserted-page');
-                    insertedDiv.setAttribute('draggable', 'true');
+                    }
+                });
 
-                    const p = document.createElement('p');
-                    p.textContent = `PDF: ${file.name}`;
+                fileInput.value = '';
+            });
 
-                    const timestamp = document.createElement('div');
-                    timestamp.classList.add('page-timestamp');
-                    timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            // OCR result handling
+            ocrResultClose.addEventListener('click', () => {
+                ocrResult.style.display = 'none';
+            });
 
-                    const controls = document.createElement('div');
-                    controls.classList.add('page-controls');
+            ocrResultCloseBtn.addEventListener('click', () => {
+                ocrResult.style.display = 'none';
+            });
 
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.classList.add('page-control-btn');
-                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-                    deleteBtn.title = "Delete";
-                    deleteBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        insertedDiv.remove();
-                    });
+            ocrResultCopy.addEventListener('click', () => {
+                navigator.clipboard.writeText(ocrResultContent.textContent)
+                    .then(() => alert('Text copied to clipboard!'))
+                    .catch(err => console.error('Failed to copy text:', err));
+            });
 
-                    controls.appendChild(deleteBtn);
+            // Crop functionality
+            cancelCrop.addEventListener('click', () => {
+                cropOverlay.style.display = 'none';
+                currentPageToCrop = null;
+            });
 
-                    insertedDiv.appendChild(p);
-                    insertedDiv.appendChild(timestamp);
-                    insertedDiv.appendChild(controls);
+            applyCrop.addEventListener('click', () => {
+                if (currentPageToCrop) {
+                    const img = currentPageToCrop.querySelector('img');
+                    img.style.border = '5px solid var(--primary-color)';
+                }
+                cropOverlay.style.display = 'none';
+                currentPageToCrop = null;
+            });
 
-                    if (insertBeforeElement) {
-                        chatBox.insertBefore(insertedDiv, insertBeforeElement);
-                    } else {
-                        chatBox.appendChild(insertedDiv);
+            // Drawing functionality
+            drawCanvas.addEventListener('mousedown', startDrawing);
+            drawCanvas.addEventListener('touchstart', handleTouchStart);
+            drawCanvas.addEventListener('mousemove', draw);
+            drawCanvas.addEventListener('touchmove', handleTouchMove);
+            drawCanvas.addEventListener('mouseup', stopDrawing);
+            drawCanvas.addEventListener('touchend', stopDrawing);
+            drawCanvas.addEventListener('mouseout', stopDrawing);
+
+            function startDrawing(e) {
+                isDrawing = true;
+                const rect = drawCanvas.getBoundingClientRect();
+                lastX = (e.clientX || e.touches[0].clientX) - rect.left;
+                lastY = (e.clientY || e.touches[0].clientY) - rect.top;
+            }
+
+            function handleTouchStart(e) {
+                e.preventDefault();
+                startDrawing(e.touches[0]);
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+
+                const rect = drawCanvas.getBoundingClientRect();
+                const currentX = (e.clientX || e.touches[0].clientX) - rect.left;
+                const currentY = (e.clientY || e.touches[0].clientY) - rect.top;
+
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(currentX, currentY);
+                ctx.stroke();
+
+                lastX = currentX;
+                lastY = currentY;
+            }
+
+            function handleTouchMove(e) {
+                e.preventDefault();
+                draw(e.touches[0]);
+            }
+
+            function stopDrawing() {
+                isDrawing = false;
+            }
+
+            clearCanvas.addEventListener('click', () => {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = currentLineWidth;
+            });
+
+            saveDrawing.addEventListener('click', () => {
+                const dataURL = drawCanvas.toDataURL('image/png');
+                const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
+                const markerRect = insertMarker.getBoundingClientRect();
+                let insertBeforeElement = null;
+
+                for (let i = 0; i < messages.length; i++) {
+                    const rect = messages[i].getBoundingClientRect();
+                    if (markerRect.top < rect.top + rect.height / 2) {
+                        insertBeforeElement = messages[i];
+                        break;
                     }
                 }
-            });
 
-            // Reset file input
-            fileInput.value = '';
-        });
+                const insertedDiv = document.createElement('div');
+                insertedDiv.classList.add('inserted-page');
+                insertedDiv.setAttribute('draggable', 'true');
 
-        // Crop functionality
-        cancelCrop.addEventListener('click', () => {
-            cropOverlay.style.display = 'none';
-            currentPageToCrop = null;
-        });
+                const img = document.createElement('img');
+                img.src = dataURL;
+                img.alt = "Drawing";
 
-        applyCrop.addEventListener('click', () => {
-            // In a real implementation, you would use a cropping library like Cropper.js
-            // For this example, we'll just simulate cropping
-            if (currentPageToCrop) {
-                const img = currentPageToCrop.querySelector('img');
-                // Simulate crop by adding a border
-                img.style.border = '5px solid var(--primary-color)';
-            }
-            cropOverlay.style.display = 'none';
-            currentPageToCrop = null;
-        });
+                const timestamp = document.createElement('div');
+                timestamp.classList.add('page-timestamp');
+                timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        // Drawing functionality
-        drawCanvas.addEventListener('mousedown', startDrawing);
-        drawCanvas.addEventListener('touchstart', handleTouchStart);
-        drawCanvas.addEventListener('mousemove', draw);
-        drawCanvas.addEventListener('touchmove', handleTouchMove);
-        drawCanvas.addEventListener('mouseup', stopDrawing);
-        drawCanvas.addEventListener('touchend', stopDrawing);
-        drawCanvas.addEventListener('mouseout', stopDrawing);
+                const controls = document.createElement('div');
+                controls.classList.add('page-controls');
 
-        function startDrawing(e) {
-            isDrawing = true;
-            const rect = drawCanvas.getBoundingClientRect();
-            lastX = (e.clientX || e.touches[0].clientX) - rect.left;
-            lastY = (e.clientY || e.touches[0].clientY) - rect.top;
-        }
+                const deleteBtn = document.createElement('button');
+                deleteBtn.classList.add('page-control-btn');
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.title = "Delete";
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    insertedDiv.remove();
+                });
 
-        function handleTouchStart(e) {
-            e.preventDefault();
-            startDrawing(e.touches[0]);
-        }
+                controls.appendChild(deleteBtn);
 
-        function draw(e) {
-            if (!isDrawing) return;
+                insertedDiv.appendChild(img);
+                insertedDiv.appendChild(timestamp);
+                insertedDiv.appendChild(controls);
 
-            const rect = drawCanvas.getBoundingClientRect();
-            const currentX = (e.clientX || e.touches[0].clientX) - rect.left;
-            const currentY = (e.clientY || e.touches[0].clientY) - rect.top;
-
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(currentX, currentY);
-            ctx.stroke();
-
-            lastX = currentX;
-            lastY = currentY;
-        }
-
-        function handleTouchMove(e) {
-            e.preventDefault();
-            draw(e.touches[0]);
-        }
-
-        function stopDrawing() {
-            isDrawing = false;
-        }
-
-        clearCanvas.addEventListener('click', () => {
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
-            ctx.strokeStyle = currentColor;
-            ctx.lineWidth = currentLineWidth;
-        });
-
-        saveDrawing.addEventListener('click', () => {
-            // Convert canvas to image and insert into chat
-            const dataURL = drawCanvas.toDataURL('image/png');
-
-            // Find where to insert (similar to file insertion)
-            const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
-            const markerRect = insertMarker.getBoundingClientRect();
-            let insertBeforeElement = null;
-
-            for (let i = 0; i < messages.length; i++) {
-                const rect = messages[i].getBoundingClientRect();
-                if (markerRect.top < rect.top + rect.height / 2) {
-                    insertBeforeElement = messages[i];
-                    break;
-                }
-            }
-
-            const insertedDiv = document.createElement('div');
-            insertedDiv.classList.add('inserted-page');
-            insertedDiv.setAttribute('draggable', 'true');
-
-            const img = document.createElement('img');
-            img.src = dataURL;
-            img.alt = "Drawing";
-
-            const timestamp = document.createElement('div');
-            timestamp.classList.add('page-timestamp');
-            timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-            const controls = document.createElement('div');
-            controls.classList.add('page-controls');
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.classList.add('page-control-btn');
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.title = "Delete";
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                insertedDiv.remove();
-            });
-
-            controls.appendChild(deleteBtn);
-
-            insertedDiv.appendChild(img);
-            insertedDiv.appendChild(timestamp);
-            insertedDiv.appendChild(controls);
-
-            if (insertBeforeElement) {
-                chatBox.insertBefore(insertedDiv, insertBeforeElement);
-            } else {
-                chatBox.appendChild(insertedDiv);
-            }
-
-            // Reset canvas and close drawing mode
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
-            ctx.strokeStyle = currentColor;
-            ctx.lineWidth = currentLineWidth;
-
-            drawingCanvas.style.display = 'none';
-            isDrawingMode = false;
-            quickDraw.style.backgroundColor = '';
-        });
-
-        cancelDrawing.addEventListener('click', () => {
-            // Reset canvas and close drawing mode
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
-            ctx.strokeStyle = currentColor;
-            ctx.lineWidth = currentLineWidth;
-
-            drawingCanvas.style.display = 'none';
-            isDrawingMode = false;
-            quickDraw.style.backgroundColor = '';
-        });
-
-        // Math equation functionality
-        cancelMath.addEventListener('click', () => {
-            mathInput.style.display = 'none';
-            isMathMode = false;
-            quickMath.style.backgroundColor = '';
-        });
-
-        insertMath.addEventListener('click', () => {
-            const equation = mathTextarea.value.trim();
-            if (!equation) return;
-
-            // Find where to insert (similar to file insertion)
-            const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
-            const markerRect = insertMarker.getBoundingClientRect();
-            let insertBeforeElement = null;
-
-            for (let i = 0; i < messages.length; i++) {
-                const rect = messages[i].getBoundingClientRect();
-                if (markerRect.top < rect.top + rect.height / 2) {
-                    insertBeforeElement = messages[i];
-                    break;
-                }
-            }
-
-            // Create a message with the LaTeX equation
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            messageDiv.classList.add('user-message');
-            messageDiv.innerHTML = `
-                <div class="markdown-content">
-                    <p>$$${equation}$$</p>
-                </div>
-                <div class="timestamp user-timestamp">
-                    ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-            `;
-
-            if (insertBeforeElement) {
-                chatBox.insertBefore(messageDiv, insertBeforeElement);
-            } else {
-                chatBox.appendChild(messageDiv);
-            }
-
-            // Render the LaTeX
-            renderMathInElement(messageDiv, {
-                delimiters: [
-                    { left: '$$', right: '$$', display: true },
-                    { left: '$', right: '$', display: false },
-                    { left: '\\(', right: '\\)', display: false },
-                    { left: '\\[', right: '\\]', display: true }
-                ],
-                throwOnError: false
-            });
-
-            // Close math input
-            mathInput.style.display = 'none';
-            isMathMode = false;
-            quickMath.style.backgroundColor = '';
-        });
-
-        // Draggable page functionality
-        chatBox.addEventListener('mousedown', (e) => {
-            const page = e.target.closest('.inserted-page');
-            if (!page) return;
-
-            e.preventDefault();
-            isDragging = true;
-            currentDraggedElement = page;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            initialX = page.offsetLeft;
-            initialY = page.offsetTop;
-            page.classList.add('dragging');
-
-            // Temporarily make it absolute positioned for dragging
-            const rect = page.getBoundingClientRect();
-            page.style.position = 'absolute';
-            page.style.left = `${rect.left}px`;
-            page.style.top = `${rect.top}px`;
-            page.style.width = `${rect.width}px`;
-            page.style.margin = '0';
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging || !currentDraggedElement) return;
-
-            const dx = e.clientX - dragStartX;
-            const dy = e.clientY - dragStartY;
-
-            currentDraggedElement.style.left = `${initialX + dx}px`;
-            currentDraggedElement.style.top = `${initialY + dy}px`;
-        });
-
-        document.addEventListener('mouseup', (e) => {
-            if (!isDragging || !currentDraggedElement) return;
-
-            isDragging = false;
-            currentDraggedElement.classList.remove('dragging');
-
-            // Find the closest position to insert
-            const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
-            const draggedRect = currentDraggedElement.getBoundingClientRect();
-            const draggedCenterY = draggedRect.top + draggedRect.height / 2;
-
-            let closestElement = null;
-            let minDistance = Infinity;
-
-            for (let i = 0; i < messages.length; i++) {
-                if (messages[i] === currentDraggedElement) continue;
-
-                const rect = messages[i].getBoundingClientRect();
-                const centerY = rect.top + rect.height / 2;
-                const distance = Math.abs(draggedCenterY - centerY);
-
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestElement = messages[i];
-                }
-            }
-
-            // Reset positioning
-            currentDraggedElement.style.position = '';
-            currentDraggedElement.style.left = '';
-            currentDraggedElement.style.top = '';
-            currentDraggedElement.style.width = '';
-            currentDraggedElement.style.margin = '10px 0';
-
-            // Reinsert at new position
-            if (closestElement) {
-                const closestRect = closestElement.getBoundingClientRect();
-                if (draggedCenterY < closestRect.top + closestRect.height / 2) {
-                    chatBox.insertBefore(currentDraggedElement, closestElement);
+                if (insertBeforeElement) {
+                    chatBox.insertBefore(insertedDiv, insertBeforeElement);
                 } else {
-                    chatBox.insertBefore(currentDraggedElement, closestElement.nextSibling);
+                    chatBox.appendChild(insertedDiv);
                 }
-            } else {
-                chatBox.appendChild(currentDraggedElement);
-            }
 
-            currentDraggedElement = null;
-        });
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = currentLineWidth;
 
-        // Touch support for dragging
-        chatBox.addEventListener('touchstart', (e) => {
-            const page = e.target.closest('.inserted-page');
-            if (!page) return;
+                drawingCanvas.style.display = 'none';
+                isDrawingMode = false;
+                quickDraw.style.backgroundColor = '';
+            });
 
-            e.preventDefault();
-            isDragging = true;
-            currentDraggedElement = page;
-            dragStartX = e.touches[0].clientX;
-            dragStartY = e.touches[0].clientY;
-            initialX = page.offsetLeft;
-            initialY = page.offsetTop;
-            page.classList.add('dragging');
+            cancelDrawing.addEventListener('click', () => {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = currentLineWidth;
 
-            // Temporarily make it absolute positioned for dragging
-            const rect = page.getBoundingClientRect();
-            page.style.position = 'absolute';
-            page.style.left = `${rect.left}px`;
-            page.style.top = `${rect.top}px`;
-            page.style.width = `${rect.width}px`;
-            page.style.margin = '0';
-        }, { passive: false });
+                drawingCanvas.style.display = 'none';
+                isDrawingMode = false;
+                quickDraw.style.backgroundColor = '';
+            });
 
-        document.addEventListener('touchmove', (e) => {
-            if (!isDragging || !currentDraggedElement) return;
+            // Math equation functionality
+            cancelMath.addEventListener('click', () => {
+                mathInput.style.display = 'none';
+                isMathMode = false;
+                quickMath.style.backgroundColor = '';
+            });
 
-            e.preventDefault();
-            const dx = e.touches[0].clientX - dragStartX;
-            const dy = e.touches[0].clientY - dragStartY;
+            insertMath.addEventListener('click', () => {
+                const equation = mathTextarea.value.trim();
+                if (!equation) return;
 
-            currentDraggedElement.style.left = `${initialX + dx}px`;
-            currentDraggedElement.style.top = `${initialY + dy}px`;
-        }, { passive: false });
+                const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
+                const markerRect = insertMarker.getBoundingClientRect();
+                let insertBeforeElement = null;
 
-        document.addEventListener('touchend', (e) => {
-            if (!isDragging || !currentDraggedElement) return;
-
-            isDragging = false;
-            currentDraggedElement.classList.remove('dragging');
-
-            // Find the closest position to insert
-            const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
-            const draggedRect = currentDraggedElement.getBoundingClientRect();
-            const draggedCenterY = draggedRect.top + draggedRect.height / 2;
-
-            let closestElement = null;
-            let minDistance = Infinity;
-
-            for (let i = 0; i < messages.length; i++) {
-                if (messages[i] === currentDraggedElement) continue;
-
-                const rect = messages[i].getBoundingClientRect();
-                const centerY = rect.top + rect.height / 2;
-                const distance = Math.abs(draggedCenterY - centerY);
-
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestElement = messages[i];
+                for (let i = 0; i < messages.length; i++) {
+                    const rect = messages[i].getBoundingClientRect();
+                    if (markerRect.top < rect.top + rect.height / 2) {
+                        insertBeforeElement = messages[i];
+                        break;
+                    }
                 }
-            }
 
-            // Reset positioning
-            currentDraggedElement.style.position = '';
-            currentDraggedElement.style.left = '';
-            currentDraggedElement.style.top = '';
-            currentDraggedElement.style.width = '';
-            currentDraggedElement.style.margin = '10px 0';
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add('user-message');
+                messageDiv.innerHTML = `
+                    <div class="markdown-content">
+                        <p>$$${equation}$$</p>
+                    </div>
+                    <div class="timestamp user-timestamp">
+                        ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                `;
 
-            // Reinsert at new position
-            if (closestElement) {
-                const closestRect = closestElement.getBoundingClientRect();
-                if (draggedCenterY < closestRect.top + closestRect.height / 2) {
-                    chatBox.insertBefore(currentDraggedElement, closestElement);
+                if (insertBeforeElement) {
+                    chatBox.insertBefore(messageDiv, insertBeforeElement);
                 } else {
-                    chatBox.insertBefore(currentDraggedElement, closestElement.nextSibling);
+                    chatBox.appendChild(messageDiv);
                 }
-            } else {
-                chatBox.appendChild(currentDraggedElement);
-            }
 
-            currentDraggedElement = null;
+                renderMathInElement(messageDiv, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false },
+                        { left: '\\(', right: '\\)', display: false },
+                        { left: '\\[', right: '\\]', display: true }
+                    ],
+                    throwOnError: false
+                });
+
+                mathInput.style.display = 'none';
+                isMathMode = false;
+                quickMath.style.backgroundColor = '';
+            });
+
+            // Draggable page functionality
+            chatBox.addEventListener('mousedown', (e) => {
+                const page = e.target.closest('.inserted-page');
+                if (!page) return;
+
+                e.preventDefault();
+                isDragging = true;
+                currentDraggedElement = page;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                initialX = page.offsetLeft;
+                initialY = page.offsetTop;
+                page.classList.add('dragging');
+
+                const rect = page.getBoundingClientRect();
+                page.style.position = 'absolute';
+                page.style.left = `${rect.left}px`;
+                page.style.top = `${rect.top}px`;
+                page.style.width = `${rect.width}px`;
+                page.style.margin = '0';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || !currentDraggedElement) return;
+
+                const dx = e.clientX - dragStartX;
+                const dy = e.clientY - dragStartY;
+
+                currentDraggedElement.style.left = `${initialX + dx}px`;
+                currentDraggedElement.style.top = `${initialY + dy}px`;
+            });
+
+            document.addEventListener('mouseup', (e) => {
+                if (!isDragging || !currentDraggedElement) return;
+
+                isDragging = false;
+                currentDraggedElement.classList.remove('dragging');
+
+                const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
+                const draggedRect = currentDraggedElement.getBoundingClientRect();
+                const draggedCenterY = draggedRect.top + draggedRect.height / 2;
+
+                let closestElement = null;
+                let minDistance = Infinity;
+
+                for (let i = 0; i < messages.length; i++) {
+                    if (messages[i] === currentDraggedElement) continue;
+
+                    const rect = messages[i].getBoundingClientRect();
+                    const centerY = rect.top + rect.height / 2;
+                    const distance = Math.abs(draggedCenterY - centerY);
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestElement = messages[i];
+                    }
+                }
+
+                currentDraggedElement.style.position = '';
+                currentDraggedElement.style.left = '';
+                currentDraggedElement.style.top = '';
+                currentDraggedElement.style.width = '';
+                currentDraggedElement.style.margin = '10px 0';
+
+                if (closestElement) {
+                    const closestRect = closestElement.getBoundingClientRect();
+                    if (draggedCenterY < closestRect.top + closestRect.height / 2) {
+                        chatBox.insertBefore(currentDraggedElement, closestElement);
+                    } else {
+                        chatBox.insertBefore(currentDraggedElement, closestElement.nextSibling);
+                    }
+                } else {
+                    chatBox.appendChild(currentDraggedElement);
+                }
+
+                currentDraggedElement = null;
+            });
+
+            // Touch support for dragging
+            chatBox.addEventListener('touchstart', (e) => {
+                const page = e.target.closest('.inserted-page');
+                if (!page) return;
+
+                e.preventDefault();
+                isDragging = true;
+                currentDraggedElement = page;
+                dragStartX = e.touches[0].clientX;
+                dragStartY = e.touches[0].clientY;
+                initialX = page.offsetLeft;
+                initialY = page.offsetTop;
+                page.classList.add('dragging');
+
+                const rect = page.getBoundingClientRect();
+                page.style.position = 'absolute';
+                page.style.left = `${rect.left}px`;
+                page.style.top = `${rect.top}px`;
+                page.style.width = `${rect.width}px`;
+                page.style.margin = '0';
+            }, { passive: false });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging || !currentDraggedElement) return;
+
+                e.preventDefault();
+                const dx = e.touches[0].clientX - dragStartX;
+                const dy = e.touches[0].clientY - dragStartY;
+
+                currentDraggedElement.style.left = `${initialX + dx}px`;
+                currentDraggedElement.style.top = `${initialY + dy}px`;
+            }, { passive: false });
+
+            document.addEventListener('touchend', (e) => {
+                if (!isDragging || !currentDraggedElement) return;
+
+                isDragging = false;
+                currentDraggedElement.classList.remove('dragging');
+
+                const messages = Array.from(chatBox.querySelectorAll('.message, .inserted-page'));
+                const draggedRect = currentDraggedElement.getBoundingClientRect();
+                const draggedCenterY = draggedRect.top + draggedRect.height / 2;
+
+                let closestElement = null;
+                let minDistance = Infinity;
+
+                for (let i = 0; i < messages.length; i++) {
+                    if (messages[i] === currentDraggedElement) continue;
+
+                    const rect = messages[i].getBoundingClientRect();
+                    const centerY = rect.top + rect.height / 2;
+                    const distance = Math.abs(draggedCenterY - centerY);
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestElement = messages[i];
+                    }
+                }
+
+                currentDraggedElement.style.position = '';
+                currentDraggedElement.style.left = '';
+                currentDraggedElement.style.top = '';
+                currentDraggedElement.style.width = '';
+                currentDraggedElement.style.margin = '10px 0';
+
+                if (closestElement) {
+                    const closestRect = closestElement.getBoundingClientRect();
+                    if (draggedCenterY < closestRect.top + closestRect.height / 2) {
+                        chatBox.insertBefore(currentDraggedElement, closestElement);
+                    } else {
+                        chatBox.insertBefore(currentDraggedElement, closestElement.nextSibling);
+                    }
+                } else {
+                    chatBox.appendChild(currentDraggedElement);
+                }
+
+                currentDraggedElement = null;
+            });
         });
     </script>
 </body>

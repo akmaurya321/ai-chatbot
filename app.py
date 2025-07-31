@@ -1,12 +1,19 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
-from huggingface_hub import InferenceClient
 import os
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_file
+from huggingface_hub import InferenceClient
 import sqlite3
 from dotenv import load_dotenv
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-from collections import deque  # Added for conversation memory
+from collections import deque
+import pytesseract
+from PIL import Image
+import io
+import base64
+import requests
+from uuid import uuid4
+import time
 
 load_dotenv()
 
@@ -16,6 +23,10 @@ app.secret_key = os.getenv("SECRET_KEY", "fallback-secret")
 # HuggingFace Token and Client
 token = os.getenv("HF_API_TOKEN")
 client = InferenceClient(token=token) if token else None
+
+# Wan Video Generation Config
+WAN_API_URL = os.getenv('WAN_API_URL', 'https://69c0d07a0967.ngrok-free.app/generate')
+WAN_API_SECRET = os.getenv('WAN_API_SECRET', 'arvindg123Kumar@12!9199244051Maurya!')
 
 # Login Manager Setup
 login_manager = LoginManager()
@@ -35,6 +46,28 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS flashcards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            front TEXT NOT NULL,
+            back TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS generated_videos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            prompt TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+    conn.close()
 
 init_db()
 
@@ -56,10 +89,178 @@ def load_user(user_id):
         return User(user[0], user[1], user[2])
     return None
 
-# In-Memory Chat History Per User (using deque for 50 message memory)
+# In-Memory Chat History Per User
 user_histories = {}
 
-# Routes
+def extract_text_from_image(image_data):
+    try:
+        if ';base64,' in image_data:
+            image_data = image_data.split(';base64,')[1]
+        
+        image_bytes = base64.b64decode(image_data)
+        image = Image.open(io.BytesIO(image_bytes))
+        
+        text = pytesseract.image_to_string(image)
+        return text.strip()
+    except Exception as e:
+        print(f"Error in OCR: {str(e)}")
+        return None
+
+@app.route("/extract_text", methods=["POST"])
+@login_required
+def extract_text():
+    image_data = request.json.get("image")
+    if not image_data:
+        return jsonify({"error": "No image provided"}), 400
+    
+    extracted_text = extract_text_from_image(image_data)
+    if extracted_text:
+        return jsonify({"text": extracted_text})
+    else:
+        return jsonify({"error": "Failed to extract text"}), 500
+
+@app.route("/flashcards", methods=["GET", "POST", "DELETE"])
+@login_required
+def flashcards():
+    if request.method == "GET":
+        conn = sqlite3.connect("users.db")
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute("SELECT id, front, back FROM flashcards WHERE user_id = ?", (current_user.id,))
+        cards = [dict(row) for row in c.fetchall()]
+        conn.close()
+        return jsonify(cards)
+    
+    elif request.method == "POST":
+        front = request.json.get("front")
+        back = request.json.get("back")
+        if not front or not back:
+            return jsonify({"error": "Front and back text required"}), 400
+        
+        conn = sqlite3.connect("users.db")
+        c = conn.cursor()
+        c.execute("INSERT INTO flashcards (user_id, front, back) VALUES (?, ?, ?)", 
+                (current_user.id, front, back))
+        conn.commit()
+        card_id = c.lastrowid
+        conn.close()
+        return jsonify({"id": card_id, "front": front, "back": back}), 201
+    
+    elif request.method == "DELETE":
+        card_id = request.json.get("id")
+        if not card_id:
+            return jsonify({"error": "Card ID required"}), 400
+        
+        conn = sqlite3.connect("users.db")
+        c = conn.cursor()
+        c.execute("DELETE FROM flashcards WHERE id = ? AND user_id = ?", 
+                (card_id, current_user.id))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True}), 200
+
+@app.route("/generate_video", methods=["POST"])
+@login_required
+def generate_video():
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt')
+        
+        if not prompt:
+            return jsonify({'error': 'Prompt is required'}), 400
+        
+        # Make request to WAN API
+        response = requests.post(
+            WAN_API_URL,
+            json={
+                'prompt': prompt,
+                'auth_token': "arvindg123Kumar@12!9199244051Maurya!"
+            },
+            timeout=120
+        )
+        
+        if response.status_code != 200:
+            return jsonify({'error': 'Video generation failed', 'details': response.text}), 500
+        
+        video_data = response.json()
+        filename = video_data.get('filename')
+        video_url = video_data.get('video_url')
+        
+        if not filename or not video_url:
+            return jsonify({'error': 'Invalid response from video generation service'}), 500
+        
+        # Store the video reference in database
+        conn = sqlite3.connect("users.db")
+        c = conn.cursor()
+        c.execute("INSERT INTO generated_videos (user_id, prompt, filename) VALUES (?, ?, ?)",
+                (current_user.id, prompt, filename))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'video_url': video_url,
+            'filename': filename,
+            'message': 'Video generated successfully'
+        })
+        
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'Video generation timed out'}), 504
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/videos/<filename>")
+@login_required
+def serve_video(filename):
+    # Verify the user has access to this video
+    conn = sqlite3.connect("users.db")
+    c = conn.cursor()
+    c.execute("SELECT filename FROM generated_videos WHERE filename = ? AND user_id = ?", 
+            (filename, current_user.id))
+    if not c.fetchone():
+        conn.close()
+        return jsonify({'error': 'Video not found or access denied'}), 404
+    conn.close()
+    
+    # In a real implementation, you would serve the file from storage
+    # For now, we'll proxy the request to the WAN API
+    try:
+        wan_video_url = f"{WAN_API_URL.rsplit('/generate', 1)[0]}/videos/{filename}"
+        response = requests.get(wan_video_url, stream=True)
+        
+        if response.status_code == 200:
+            return send_file(
+                io.BytesIO(response.content),
+                mimetype='video/mp4',
+                as_attachment=False
+            )
+        else:
+            return jsonify({'error': 'Failed to fetch video'}), 502
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/my_videos")
+@login_required
+def my_videos():
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("""
+        SELECT id, prompt, filename, created_at 
+        FROM generated_videos 
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+    """, (current_user.id,))
+    videos = [dict(row) for row in c.fetchall()]
+    conn.close()
+    
+    # Generate full URLs for each video
+    base_url = WAN_API_URL.rsplit('/generate', 1)[0]
+    for video in videos:
+        video['url'] = f"{base_url}/videos/{video['filename']}"
+    
+    return jsonify(videos)
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
@@ -68,7 +269,7 @@ def register():
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
-        name = request.form.get("name", email.split('@')[0])  # Default name from email
+        name = request.form.get("name", email.split('@')[0])
         
         if not email or not password:
             flash("Email and password are required", "error")
@@ -83,12 +284,10 @@ def register():
                 (email, hashed_pw, name))
             conn.commit()
             
-            # Get the new user's ID
             c.execute("SELECT id FROM users WHERE email = ?", (email,))
             user_id = c.fetchone()[0]
             conn.close()
             
-            # Log the user in immediately after registration
             user = User(user_id, email, name)
             login_user(user)
             flash("Registration successful!", "success")
@@ -125,7 +324,6 @@ def login():
             login_user(user_obj)
             flash(f"Welcome back, {user[2] or email}!", "success")
 
-            # Redirect admin to admin dashboard
             if email == "alexm12125@gmail.com":
                 return redirect(url_for('admin'))
 
@@ -145,7 +343,6 @@ def logout():
 @app.route("/")
 @login_required
 def index():
-    # Personalize the dashboard with user info
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
     c.execute("SELECT name, email, created_at FROM users WHERE id = ?", (current_user.id,))
@@ -167,26 +364,23 @@ def chat():
     user_input = request.json.get("message")
     user_id = current_user.id
 
-    # Initialize user's history if needed
     if user_id not in user_histories:
-        user_histories[user_id] = deque(maxlen=60)  # Stores last 60 messages
+        user_histories[user_id] = deque(maxlen=60)
     
-    # Prepare context messages
     context_messages = [
         {"role": "system", "content": f'''You are a helpful AI assistant created by Arvind Kumar Maurya.
         You're talking to {current_user.name or current_user.email}. 
         Never mention DeepSeek or Hugging Face in chat. Full name of AK MAURYA is Arvind Kumar Maurya. 
-        Your name is BalNova means young energy or.You are able to remember 60 past chat history'''}
+        Your name is BalNova means young energy. You are able to remember 60 past chat history.
+        You can help generate videos from text prompts by suggesting "Would you like me to generate a video for this?" when appropriate.'''}
     ]
     
-    # Add previous conversation history
     for msg in user_histories[user_id]:
         context_messages.append({
             "role": "user" if msg.startswith("User:") else "assistant",
             "content": msg.split(":", 1)[1].strip()
         })
     
-    # Add current user message
     context_messages.append({"role": "user", "content": user_input})
 
     try:
@@ -198,7 +392,6 @@ def chat():
     except Exception as e:
         bot_reply = f"⚠️ Error: {str(e)}"
 
-    # Store conversation (auto maintains last 60 messages)
     user_histories[user_id].append(f"User: {user_input}")
     user_histories[user_id].append(f"Assistant: {bot_reply}")
     
@@ -213,14 +406,12 @@ def history():
             user_histories[user_id].clear()
         return '', 204
     
-    # Convert deque to list for JSON serialization
     history_list = list(user_histories.get(user_id, deque()))
     return jsonify(history_list)
 
 @app.route("/admin")
 @login_required
 def admin():
-    # Only allow admin access by email
     if current_user.email != "alexm12125@gmail.com":
         flash("Access denied: Admins only.", "error")
         return redirect(url_for("index"))
@@ -228,7 +419,7 @@ def admin():
     conn = sqlite3.connect("users.db")
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT name, email, password, created_at FROM users ORDER BY created_at DESC")
+    c.execute("SELECT name, email, created_at FROM users ORDER BY created_at DESC")
     users = c.fetchall()
     conn.close()
     
