@@ -25,7 +25,7 @@ token = os.getenv("HF_API_TOKEN")
 client = InferenceClient(token=token) if token else None
 
 # Wan Video Generation Config
-WAN_API_URL = os.getenv('WAN_API_URL',)
+WAN_API_URL = os.getenv('WAN_API_URL','https://5ef0ed54ec8d.ngrok-free.app/generate')
 WAN_API_SECRET = os.getenv('WAN_API_SECRET', 'arvindg123Kumar@12!9199244051Maurya!')
 
 # Login Manager Setup
